@@ -1,0 +1,47 @@
+EXECUTION_MODE: "ACTIVE"
+DEFAULT_LOCALE: "en"
+ROOT_LOGGER_LEVEL: INFO
+CREDENTIALS:
+  SIGNIFYD:
+    TEAM_API_KEY: "******"
+  COMMERCETOOLS:
+    CLIENT_ID: "******"
+    CLIENT_SECRET: "******"
+    PROJECT_KEY: "signifyd"
+    REGION: "GCP_EUROPE_WEST1"
+DATA_MAPPING:
+  PHONE_NUMBER_FIELD:
+    customerPhoneNumberField: "phoneNumber"
+  PAYMENT_METHODS:
+    card: "CREDIT_CARD"
+    paypal: "PAYPAL_ACCOUNT"
+    bank_transaction: "ACH"
+EXCLUDED_PAYMENT_METHODS: [bank_transaction]
+DEFAULT_CONFIGURATION:
+  DECISION_ACTIONS:
+    ACCEPT:
+      ACTION_TYPE: "CUSTOM_STATE_TRANSITION"
+      CUSTOM_STATE_KEY: "order-workflow-state-confirmed"
+      FORCE_TRANSITION: true
+    HOLD:
+      ACTION_TYPE: "NONE"
+    REJECT:
+      ACTION_TYPE: "CUSTOM_STATE_TRANSITION"
+      CUSTOM_STATE_KEY: "order-workflow-state-rejected"
+      FORCE_TRANSITION: true
+COUNTRY_CONFIGURATIONS:
+  DE:
+    PRE_AUTH: true
+    SCA_EVALUATION_REQUIRED: true
+    RECOMMENDATION_ONLY: false
+    DECISION_ACTIONS:
+      ACCEPT:
+        ACTION_TYPE: "DEFAULT_STATE_TRANSITION"
+        DEFAULT_STATE: "Confirmed"
+      HOLD:
+        ACTION_TYPE: "CUSTOM_STATE_TRANSITION"
+        CUSTOM_STATE_KEY: "order-workflow-state-hold"
+        FORCE_TRANSITION: true
+      REJECT:
+        ACTION_TYPE: "DEFAULT_STATE_TRANSITION"
+        DEFAULT_STATE: "Cancelled"

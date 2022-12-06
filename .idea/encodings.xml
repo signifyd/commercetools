@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/wrappers/cloud/aws-lambda-webhook-function/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wrappers/cloud/aws-lambda-webhook-function/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wrappers/cloud/aws-lambda/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wrappers/cloud/aws-lambda/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wrappers/cloud/aws-subscriptions-lambda/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wrappers/cloud/aws-subscriptions-lambda/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wrappers/cloud/azure/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wrappers/cloud/azure/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wrappers/cloud/gcp/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wrappers/cloud/gcp/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wrappers/server/spring-boot/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wrappers/server/spring-boot/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wrappers/server/spring-cloud-function/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wrappers/server/spring-cloud-function/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/../aws-lambda-developer-guide/sample-apps/java-basic/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/../spring-cloud-function/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/../spring-cloud-function/src/main/resources" charset="UTF-8" />
+  </component>
+</project>
