@@ -16,7 +16,7 @@ public class SignifydApi {
     public final static String TEAM_ID = "SIGNIFYD-TEAM-ID";
     public final static String AUTHORIZATION_HEADER = "Authorization";
     public final static String CHECK_POINT_HEADER = "signifyd-checkpoint";
-    public final static String SHA_256_HEADER = "signifyd-checkpoint";
+    public final static String SHA_256_HEADER = "signifyd-sec-hmac-sha256";
 
     public final static String BASIC_HEADER = "Basic";
 
