@@ -37,4 +37,6 @@ public final class CustomFields {
     public final static String INVALID_INPUT = "InvalidInput";
     public final static String FAILED_VALIDATION = "FailedValidation";
 
+    // Order Custom Type
+    public final static String SIGNIFYD_ORDER_TYPE_KEY = "signifyd-order-type";
 }

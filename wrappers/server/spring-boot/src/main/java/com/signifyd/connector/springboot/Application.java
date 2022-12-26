@@ -24,7 +24,6 @@ import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.Extensi
 import com.signifyd.ctconnector.function.config.PropertyReader;
 import com.signifyd.ctconnector.function.constants.SignifydApi;
 import com.signifyd.ctconnector.function.utils.SignifydWebhookValidator;
-import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -37,8 +36,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 

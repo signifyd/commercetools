@@ -38,7 +38,9 @@ import com.signifyd.ctconnector.function.utils.OrderHelper;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.UUID;
 import java.util.function.Function;
 
 public class PreAuthFunction
@@ -61,10 +63,10 @@ public class PreAuthFunction
     }
 
     public PreAuthFunction(ConfigReader configReader,
-                           CommercetoolsClient commercetoolsClient,
-                           SignifydClient signifydClient,
-                           PropertyReader propertyReader,
-                           SignifydMapper signifydMapper) {
+            CommercetoolsClient commercetoolsClient,
+            SignifydClient signifydClient,
+            PropertyReader propertyReader,
+            SignifydMapper signifydMapper) {
         this.configReader = configReader;
         this.commercetoolsClient = commercetoolsClient;
         this.signifydClient = signifydClient;
@@ -75,13 +77,16 @@ public class PreAuthFunction
     @Override
     public ExtensionResponse<OrderUpdateAction> apply(ExtensionRequest<OrderReference> request) {
         validateExtensionRequest(request);
+        ExtensionResponse<OrderUpdateAction> response = new ExtensionResponse<>();
         Order order = request.getResource().getObj();
-        order = OrderHelper.initializeOrder(order);
-
         Payment payment = this.commercetoolsClient.getPaymentById(OrderHelper.getMostRecentPaymentIdFromOrder(order));
 
-        if (payment != null && !isOrderEligibleToProcess(payment)) {
-            ExtensionResponse<OrderUpdateAction> response = new ExtensionResponse<>();
+        if (!isOrderReadyForCheckoutApiCall(order, payment)) {
+            response.setActions(new ArrayList<>());
+            return response;
+        }
+
+        if (!isOrderEligibleToProcess(payment)) {
             response.addAction(OrderSetCustomFieldActionBuilder.of()
                     .name(CustomFields.IS_SENT_TO_SIGNIFYD)
                     .value(false)
@@ -89,8 +94,14 @@ public class PreAuthFunction
             return response;
         }
 
-        Customer customer = order.getCustomerId() != null ? this.commercetoolsClient.getCustomerById(order.getCustomerId()) : null;
-        return sendRequest(order, payment, customer);
+        order.getCustom().getFields().values().put(CustomFields.CHECKOUT_ID, UUID.randomUUID().toString());
+
+        Customer customer = order.getCustomerId() != null
+                ? this.commercetoolsClient.getCustomerById(order.getCustomerId())
+                : null;
+
+        response = sendRequest(order, payment, customer);
+        return response;
     }
 
     private CheckoutRequestDraft generateRequest(Order order, Payment payment, Customer customer) {
@@ -99,10 +110,13 @@ public class PreAuthFunction
                 .builder()
                 .checkoutId(order.getCustom().getFields().values().get(CustomFields.CHECKOUT_ID).toString())
                 .orderId(order.getId())
-                .transactions(transactionMapperFactory.generateTransactionMapper(TransactionMapperType.PRE_AUTH).generateTransactions())
-                .purchase(this.signifydMapper.mapPurchaseFromCommercetools(customer, order, configReader.getPhoneNumberFieldMapping()))
+                .transactions(transactionMapperFactory.generateTransactionMapper(TransactionMapperType.PRE_AUTH)
+                        .generateTransactions())
+                .purchase(this.signifydMapper.mapPurchaseFromCommercetools(customer, order,
+                        configReader.getPhoneNumberFieldMapping()))
                 .device(this.signifydMapper.mapDeviceFromCommercetools(order))
-                .userAccount(this.signifydMapper.mapUserAccountFromCommercetools(customer, configReader.getPhoneNumberFieldMapping()))
+                .userAccount(this.signifydMapper.mapUserAccountFromCommercetools(customer,
+                        configReader.getPhoneNumberFieldMapping()))
                 .merchantPlatform(MerchantPlatform
                         .builder()
                         .name(SignifydApi.MERCHANT_PLATFORM)
@@ -130,7 +144,8 @@ public class PreAuthFunction
     private ExtensionResponse<OrderUpdateAction> sendRequest(Order order, Payment payment, Customer customer) {
         ObjectMapper objMapper = new ObjectMapper();
         try {
-            DecisionResponse checkoutResponse = this.signifydClient.checkouts(generateRequest(order, payment, customer));
+            DecisionResponse checkoutResponse = this.signifydClient
+                    .checkouts(generateRequest(order, payment, customer));
             logger.info("PreAuth API Success: Order successfully sent to Signifyd");
             return generateResponse(checkoutResponse, order);
         } catch (Signifyd4xxException e) {
@@ -177,7 +192,8 @@ public class PreAuthFunction
                 break;
             case REJECT:
                 if (ExecutionMode.ACTIVE.equals(configReader.getExecutionMode())
-                        && configReader.getDecisionActions(order.getCountry()).getReject().getActionType().equals(ActionType.DO_NOT_CREATE_ORDER)) {
+                        && configReader.getDecisionActions(order.getCountry()).getReject().getActionType()
+                                .equals(ActionType.DO_NOT_CREATE_ORDER)) {
                     ExtensionResponse<OrderUpdateAction> response = new ExtensionResponse<>();
                     response.setStatusCode(ErrorCodes4XX.BAD_REQUEST.getValue());
                     response.setResponseType(CustomFields.FAILED_VALIDATION);
@@ -221,7 +237,14 @@ public class PreAuthFunction
     }
 
     private boolean isOrderEligibleToProcess(Payment payment) {
-        return this.configReader.getExcludedPaymentMethods().stream().noneMatch(p -> p.equals(payment.getPaymentMethodInfo().getMethod()));
+        return this.configReader.getExcludedPaymentMethods().stream()
+                .noneMatch(p -> p.equals(payment.getPaymentMethodInfo().getMethod()));
+    }
+
+    private boolean isOrderReadyForCheckoutApiCall(Order order, Payment payment) {
+        return payment != null &&
+                order.getCustom() != null &&
+                order.getCustom().getType().getTypeId().name() != CustomFields.SIGNIFYD_ORDER_TYPE_KEY;
     }
 
     private void validateExtensionRequest(ExtensionRequest<OrderReference> extensionRequest) {
