@@ -9,7 +9,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 import com.signifyd.ctconnector.function.adapter.signifyd.enums.Checkpoint;
-import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.checkoutResponse.Action;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.webhook.WebhookRequest;
 
 public class SignifydWebhookValidator {

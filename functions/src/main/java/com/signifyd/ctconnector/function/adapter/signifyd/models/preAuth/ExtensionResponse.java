@@ -36,6 +36,10 @@ public class ExtensionResponse<T extends ResourceUpdateAction<T>> {
         actions.add(action);
     }
 
+    public void setActions(List<T> actions) {
+        this.actions = actions;
+    }
+
     public void setStatusCode(int statusCode) {
         this.statusCode = statusCode;
     }

@@ -4,7 +4,6 @@ import com.commercetools.api.models.customer.Customer;
 import com.commercetools.api.models.order.Order;
 import com.signifyd.ctconnector.function.config.model.phoneNumber.PhoneNumberField;
 import com.signifyd.ctconnector.function.constants.CustomFields;
-import java.util.UUID;
 
 public class OrderHelper {
 
@@ -23,7 +22,10 @@ public class OrderHelper {
         String shippingAddressPhoneNumber = order.getShippingAddress().getPhone();
         String billingAddressPhoneNumber = order.getBillingAddress().getPhone();
         String customerPhoneNumber = getCustomerPhoneNumber(customer, phoneNumberField);
-        return (billingAddressPhoneNumber != null && !billingAddressPhoneNumber.equals("")) ? billingAddressPhoneNumber : ((shippingAddressPhoneNumber != null && !shippingAddressPhoneNumber.equals("")) ? shippingAddressPhoneNumber : customerPhoneNumber);
+        return (billingAddressPhoneNumber != null && !billingAddressPhoneNumber.equals("")) ? billingAddressPhoneNumber
+                : ((shippingAddressPhoneNumber != null && !shippingAddressPhoneNumber.equals(""))
+                        ? shippingAddressPhoneNumber
+                        : customerPhoneNumber);
     }
 
     public static String getConfirmationEmail(Customer customer, Order order) {
@@ -39,7 +41,8 @@ public class OrderHelper {
 
     public static String getCustomerPhoneNumber(Customer customer, PhoneNumberField phoneNumberField) {
         if (customer != null && phoneNumberField != null) {
-            Object customerPhoneNumber = customer.getCustom().getFields().values().get(phoneNumberField.getCustomerPhoneNumberField());
+            Object customerPhoneNumber = customer.getCustom().getFields().values()
+                    .get(phoneNumberField.getCustomerPhoneNumberField());
             return customerPhoneNumber != null ? customerPhoneNumber.toString() : null;
         }
         return null;
@@ -51,11 +54,5 @@ public class OrderHelper {
         }
         var count = order.getPaymentInfo().getPayments().size();
         return order.getPaymentInfo().getPayments().get(count - 1).getId();
-
-    }
-
-    public static Order initializeOrder(Order order) {
-        order.getCustom().getFields().values().put(CustomFields.CHECKOUT_ID, UUID.randomUUID().toString());
-        return order;
     }
 }

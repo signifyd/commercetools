@@ -8,8 +8,15 @@ import com.commercetools.api.models.order.*;
 import com.commercetools.api.models.type.CustomFields;
 import com.commercetools.api.models.type.FieldContainer;
 import com.commercetools.api.models.type.TypeReference;
+import com.commercetools.api.models.type.TypeResourceIdentifier;
+import com.commercetools.api.models.common.Money;
 import com.commercetools.api.models.customer.Customer;
 import com.commercetools.api.models.payment.Payment;
+import com.commercetools.api.models.payment.PaymentDraft;
+import com.commercetools.api.models.payment.PaymentDraftBuilder;
+import com.commercetools.api.models.payment.PaymentMethodInfo;
+import com.commercetools.api.models.payment.PaymentResourceIdentifierBuilder;
+import com.commercetools.api.models.payment.TransactionDraft;
 import com.signifyd.ctconnector.function.config.ConfigReader;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import io.vrap.rmf.base.client.oauth2.ClientCredentials;
@@ -168,5 +175,54 @@ public class CommercetoolsClient {
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Order setCustomType(Order order, String customTypeKey, FieldContainer fields) {
+        List<OrderUpdateAction> actionList = new ArrayList<>();
+
+        TypeResourceIdentifier customType = TypeResourceIdentifier.builder()
+                .key(customTypeKey)
+                .build();
+
+        actionList.add(OrderSetCustomTypeActionBuilder.of()
+                    .fields(fields)
+                    .type(customType)
+                    .build());
+
+        return orderUpdate(order, actionList);
+    }
+
+    public Payment createPayment(
+        Money amountPlanned,
+        PaymentMethodInfo paymentMethodInfo,
+        List<TransactionDraft> transactions
+    ) {
+        try {
+            PaymentDraft paymentDraft = PaymentDraftBuilder.of()
+                    .amountPlanned(amountPlanned)
+                    .transactions(transactions)
+                    .paymentMethodInfo(paymentMethodInfo)
+                    .build();
+
+            CompletableFuture<ApiHttpResponse<Payment>> response = this.projectApiRoot.payments().post(paymentDraft).execute();
+
+            return response.get().getBody();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Order addPaymentToOrder(Order order, Payment payment) {
+        List<OrderUpdateAction> actionList = new ArrayList<>();
+        actionList.add(
+            OrderAddPaymentActionBuilder.of()
+                    .payment(PaymentResourceIdentifierBuilder.of()
+                            .id(payment.getId())
+                            .build()
+                    )
+                    .build()
+        );
+
+        return orderUpdate(order, actionList);
     }
 }
