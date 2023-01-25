@@ -9,6 +9,8 @@ public class SignifydApi {
     public final static String POST_SALE_REPRICE = "Post Sale - Reprice";
     public final static String POST_SALE_REROUTE = "Post Sale - Reroute";
     public final static String POST_SALE_FULFILLMENT = "Post Sale - Fulfillment";
+    public final static String ATTEMPT_RETURN = "Returns - Attempt";
+    public final static String EXECUTE_RETURN = "Returns - Execute";
     public final static String SIGNIFYD_ORDER_URL = "https://console.signifyd.com/orders/";
     public final static String MERCHANT_PLATFORM = "commercetools";
     public final static String SIGNIFYD_CLIENT_INFO = "Signifyd Commercetools Integration";

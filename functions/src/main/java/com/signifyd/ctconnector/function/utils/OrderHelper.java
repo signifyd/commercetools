@@ -2,12 +2,14 @@ package com.signifyd.ctconnector.function.utils;
 
 import com.commercetools.api.models.customer.Customer;
 import com.commercetools.api.models.order.Order;
+import com.commercetools.api.models.order.ReturnInfo;
 import com.signifyd.ctconnector.function.config.model.phoneNumber.PhoneNumberField;
 import com.signifyd.ctconnector.function.constants.CustomFields;
 
 public class OrderHelper {
 
     private static boolean isOrderSentToSignifyd(Order order) {
+        if (order.getCustom() == null) return false;
         Object isSentToSignifydField = order.getCustom().getFields().values().get(CustomFields.IS_SENT_TO_SIGNIFYD);
         return isSentToSignifydField != null && isSentToSignifydField.toString().equals("true");
     }
@@ -40,7 +42,7 @@ public class OrderHelper {
     }
 
     public static String getCustomerPhoneNumber(Customer customer, PhoneNumberField phoneNumberField) {
-        if (customer != null && phoneNumberField != null) {
+        if (customer != null && customer.getCustom() != null && phoneNumberField != null) {
             Object customerPhoneNumber = customer.getCustom().getFields().values()
                     .get(phoneNumberField.getCustomerPhoneNumberField());
             return customerPhoneNumber != null ? customerPhoneNumber.toString() : null;
@@ -54,5 +56,19 @@ public class OrderHelper {
         }
         var count = order.getPaymentInfo().getPayments().size();
         return order.getPaymentInfo().getPayments().get(count - 1).getId();
+    }
+
+    public static boolean hasOrderDeviceFingerprint(Order order) {
+        return order.getCustom() != null
+                && order.getCustom().getFields().values().get(CustomFields.CLIENT_IP_ADDRESS) != null
+                && order.getCustom().getFields().values().get(CustomFields.SESSION_ID) != null;
+    }
+
+    public static ReturnInfo getMostRecentReturnInfoFromOrder(Order order) {
+        if (order.getReturnInfo() != null && !order.getReturnInfo().isEmpty()) {
+            int count = order.getReturnInfo().size();
+            return order.getReturnInfo().get(count - 1);
+        }
+        return null;
     }
 }

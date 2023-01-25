@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.signifyd.connector.springboot.models.SnsNotificationMessage;
 import com.signifyd.connector.springboot.models.SnsSubscriptionConfirmationMessage;
+import com.signifyd.ctconnector.function.ReturnFunction;
 import com.signifyd.ctconnector.function.PreAuthFunction;
 import com.signifyd.ctconnector.function.SubscriptionFunction;
 import com.signifyd.ctconnector.function.WebhookFunction;
@@ -27,6 +28,8 @@ import com.signifyd.ctconnector.function.utils.SignifydWebhookValidator;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -42,10 +45,12 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @SpringBootApplication
 @RestController
 public class Application {
+    private static final String CREATE_ACTION_TYPE = "Create";
+    private static final String UPDATE_ACTION_TYPE = "Update";
 
     private final ConfigReader configReader;
-
     private final PreAuthFunction preAuthFunction;
+    private final ReturnFunction returnFunction;
     private final SubscriptionFunction subscriptionFunction;
     private final WebhookFunction webhookFunction;
     ObjectMapper objectMapper = new ObjectMapper()
@@ -66,6 +71,7 @@ public class Application {
         SignifydMapper signifydMapper = new SignifydMapper();
 
         this.preAuthFunction = new PreAuthFunction(configReader, commercetoolsClient, signifydClient, propertyReader, signifydMapper);
+        this.returnFunction = new ReturnFunction(configReader, signifydClient, propertyReader, signifydMapper);
         this.subscriptionFunction = new SubscriptionFunction(configReader, commercetoolsClient, signifydClient);
         this.webhookFunction = new WebhookFunction(configReader, commercetoolsClient);
     }
@@ -77,6 +83,36 @@ public class Application {
             return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @PostMapping("/extensions")
+    public ResponseEntity<ExtensionResponse> extensions(@RequestBody ExtensionRequest request) {
+        switch (request.getResource().getTypeId().toString()) {
+            case OrderReference.ORDER: {
+                ExtensionResponse<OrderUpdateAction> response;
+                switch (request.getAction()) {
+                    case CREATE_ACTION_TYPE: {
+                        response = this.preAuthFunction.apply((ExtensionRequest<OrderReference>) request);
+                        break;
+                    }
+                    case UPDATE_ACTION_TYPE: {
+                        response = this.returnFunction.apply((ExtensionRequest<OrderReference>) request);
+                        break;
+                    }
+                    default:
+                        throw new NotImplementedException(
+                                String.format("Received action type (%s) is not supported", request.getAction()));
+                }
+                if (response.isErrorResponse()) {
+                    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+                }
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }
+            default:
+                throw new NotImplementedException(
+                        String.format("Received resource type (%s) is not supported",
+                                request.getResource().getTypeId()));
+        }
     }
 
     @PostMapping(value = "/subscriptions/pubsub",

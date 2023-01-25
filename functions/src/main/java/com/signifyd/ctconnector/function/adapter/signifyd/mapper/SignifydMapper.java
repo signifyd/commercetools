@@ -2,8 +2,12 @@ package com.signifyd.ctconnector.function.adapter.signifyd.mapper;
 
 import com.commercetools.api.models.cart.LineItem;
 import com.commercetools.api.models.customer.Customer;
+import com.commercetools.api.models.order.LineItemReturnItem;
 import com.commercetools.api.models.order.Order;
+import com.commercetools.api.models.order.ReturnInfo;
+import com.commercetools.api.models.order.ReturnItem;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.UserAccount;
+import com.signifyd.ctconnector.function.adapter.signifyd.enums.ReturnItemReason;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.*;
 import com.signifyd.ctconnector.function.config.ConfigReader;
 import com.signifyd.ctconnector.function.config.model.phoneNumber.PhoneNumberField;
@@ -66,6 +70,40 @@ public class SignifydMapper {
                     .itemId(item.getId())
                     .build());
         }
+        return productList;
+    }
+
+    public List<ReturnedProduct> mapReturnedProductsFromCommercetools(List<LineItem> lineItems, ReturnInfo returnInfo)
+            throws NullPointerException {
+        ConfigReader configReader = new ConfigReader();
+        List<ReturnedProduct> productList = new ArrayList<>();
+
+        for (ReturnItem returnItem : returnInfo.getItems()) {
+            LineItemReturnItem lineItemReturnItem = (LineItemReturnItem) returnItem;
+            LineItem item = lineItems.stream().filter(li -> li.getId().equals(lineItemReturnItem.getLineItemId()))
+                    .findFirst()
+                    .orElseThrow();
+
+            String reason;
+            try {
+                reason = ReturnItemReason.valueOf(lineItemReturnItem.getComment()).name();
+            } catch (NullPointerException | IllegalArgumentException e) {
+                throw new NullPointerException(
+                        String.format("Return item \"%s\" has not a valid reason.",
+                                item.getName().get(configReader.getLocale())));
+            }
+
+            productList.add(ReturnedProduct
+                    .builder()
+                    .reason(reason)
+                    .itemName(item.getName().get(configReader.getLocale()))
+                    .itemPrice(Price.commerceToolsPrice(item.getTotalPrice()))
+                    .itemQuantity(item.getQuantity().intValue())
+                    .itemIsDigital(Boolean.FALSE)
+                    .itemId(item.getId())
+                    .build());
+        }
+
         return productList;
     }
 
