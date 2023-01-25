@@ -1,6 +1,7 @@
 package com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth;
 
 import com.commercetools.api.models.ResourceUpdateAction;
+import com.commercetools.api.models.common.LocalizedString;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,6 +26,8 @@ public class ExtensionResponse<T extends ResourceUpdateAction<T>> {
     @JsonProperty
     private String message;
     @JsonProperty
+    private LocalizedString localizedMessage;
+    @JsonProperty
     private String responseType;
     @JsonProperty
     private List<ExtensionError> errors;
@@ -46,6 +49,14 @@ public class ExtensionResponse<T extends ResourceUpdateAction<T>> {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String getMessage() {
+        return this.message;
+    }
+
+    public void setLocalizedMessage(LocalizedString localizedMessage) {
+        this.localizedMessage = localizedMessage;
     }
 
     public void setResponseType(String responseType) {

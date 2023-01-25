@@ -19,6 +19,10 @@ import com.signifyd.ctconnector.function.adapter.signifyd.models.postSale.rerout
 import com.signifyd.ctconnector.function.adapter.signifyd.models.postAuth.sale.SaleRequestDraft;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.transaction.TransactionRequest.TransactionRequestDraft;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.transaction.TransactionResponse.TransactionResponse;
+import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.attemptReturn.AttemptReturnRequestDraft;
+import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.attemptReturn.AttemptReturnResponse;
+import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.executeReturn.ExecuteReturnRequestDraft;
+import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.executeReturn.ExecuteReturnResponse;
 import com.signifyd.ctconnector.function.config.ConfigReader;
 import com.signifyd.ctconnector.function.constants.SignifydApi;
 import okhttp3.*;
@@ -64,6 +68,15 @@ public class SignifydClient {
     public DecisionResponse reroute(RerouteRequestDraft draft) throws Signifyd4xxException, Signifyd5xxException {
         return this.execute(draft, DecisionResponse.class, SignifydApi.POST_SALE_REROUTE, "v3/orders/events/reroutes");
     }
+
+    public AttemptReturnResponse attemptReturn(AttemptReturnRequestDraft draft) throws Signifyd4xxException, Signifyd5xxException {
+        return this.execute(draft, AttemptReturnResponse.class, SignifydApi.ATTEMPT_RETURN, "v3/orders/events/returns/attempts");
+    }
+
+    public ExecuteReturnResponse executeReturn(ExecuteReturnRequestDraft draft) throws Signifyd4xxException, Signifyd5xxException {
+        return this.execute(draft, ExecuteReturnResponse.class, SignifydApi.EXECUTE_RETURN, "v3/orders/events/returns/executions");
+    }
+
 
     private <B, T> T execute(B body, Class<T> clazz, String apiName, String path) throws Signifyd4xxException, Signifyd5xxException {
 
