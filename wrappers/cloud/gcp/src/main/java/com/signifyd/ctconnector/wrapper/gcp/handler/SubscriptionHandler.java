@@ -13,7 +13,8 @@ import com.signifyd.ctconnector.function.config.model.ExecutionMode;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.logging.Logger;
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SubscriptionHandler implements BackgroundFunction<Message> {
     private static final ObjectMapper objectMapper = new ObjectMapper()
@@ -21,7 +22,7 @@ public class SubscriptionHandler implements BackgroundFunction<Message> {
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private static final ConfigReader configReader = new ConfigReader();
     private static final SubscriptionFunction function = new SubscriptionFunction();
-    private static final Logger logger = Logger.getLogger(SubscriptionHandler.class.getName());
+    private final Logger logger = (Logger) LoggerFactory.getLogger(getClass().getName());
 
     @Override
     public void accept(Message message, Context context) {

@@ -4,14 +4,13 @@ import io.vrap.rmf.base.client.http.HttpStatusCode;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.commercetools.api.models.order.Order;
 import com.commercetools.api.models.order.OrderReference;
 import com.commercetools.api.models.order.OrderUpdateAction;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.signifyd.ctconnector.function.PreAuthFunction;
+import com.signifyd.ctconnector.function.ReturnFunction;
 import com.signifyd.ctconnector.function.config.ConfigReader;
 import com.signifyd.ctconnector.function.config.model.ExecutionMode;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.ExtensionRequest;
@@ -23,9 +22,8 @@ import ch.qos.logback.classic.Logger;
 
 import java.util.Map;
 
-public class PreAuthHandler implements RequestHandler<Map<String, Object>, ExtensionsResponse> {
-
-    private static final PreAuthFunction function = new PreAuthFunction();
+public class ReturnHandler implements RequestHandler<Map<String, Object>, ExtensionsResponse> {
+    private static final ReturnFunction function = new ReturnFunction();
     private static final ConfigReader configReader = new ConfigReader();
     private final Logger logger = (Logger) LoggerFactory.getLogger(getClass().getName());
     private static final ObjectMapper objectMapper = new ObjectMapper()
@@ -44,15 +42,10 @@ public class PreAuthHandler implements RequestHandler<Map<String, Object>, Exten
         try {
             ExtensionRequest<OrderReference> request = objectMapper.readValue(event.get("body").toString(), ExtensionRequest.class);
             ExtensionResponse<OrderUpdateAction> result = new ExtensionResponse<OrderUpdateAction>();
-            Order order = ((OrderReference) request.getResource()).getObj();
-            if (!configReader.isPreAuth(order.getCountry())) {
-                response.setStatusCode(HttpStatusCode.OK_200);
-                return response;
-            }
             result = function.apply(request);
             if (result.isErrorResponse()) {
                 response.setStatusCode(HttpStatusCode.BAD_REQUEST_400);
-                logger.info("PreAuth prevented returning with 400 code:" + result.getMessage());
+                logger.info("Return prevented returning with 400 code:" + result.getMessage());
             }
             String rawBody = objectMapper.writeValueAsString(result);
             response.setBody(rawBody);

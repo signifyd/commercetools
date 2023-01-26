@@ -1,8 +1,11 @@
 package azure;
 
 import ch.qos.logback.classic.Logger;
+import io.vrap.rmf.base.client.http.HttpStatusCode;
+
 import com.commercetools.api.models.order.Order;
 import com.commercetools.api.models.order.OrderReference;
+import com.commercetools.api.models.order.OrderUpdateAction;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,13 +14,16 @@ import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.HttpMethod;
 import com.microsoft.azure.functions.HttpRequestMessage;
 import com.microsoft.azure.functions.HttpResponseMessage;
-import com.microsoft.azure.functions.HttpStatus;
+import com.microsoft.azure.functions.HttpStatusType;
 import com.microsoft.azure.functions.annotation.AuthorizationLevel;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
 import com.signifyd.ctconnector.function.PreAuthFunction;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.ExtensionRequest;
+import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.ExtensionResponse;
 import com.signifyd.ctconnector.function.config.ConfigReader;
+import com.signifyd.ctconnector.function.config.model.ExecutionMode;
+
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
@@ -37,34 +43,32 @@ public class PreAuthHandler {
                     name = "req",
                     methods = {HttpMethod.POST},
                     authLevel = AuthorizationLevel.FUNCTION)
-            HttpRequestMessage<Optional<String>> request,
-            final ExecutionContext context) {
-        var preAuthRequest = new ExtensionRequest<OrderReference>();
-        String bodyRaw = request.getBody().orElseThrow();
+            HttpRequestMessage<Optional<String>> httpRequestMessage,
+            final ExecutionContext context
+    ) {
+                HttpResponseMessage.Builder responseBuilder = httpRequestMessage
+                .createResponseBuilder(HttpStatusType.custom(HttpStatusCode.OK_200))
+                .header("Content-Type", "application/json");
+
+        if (ExecutionMode.DISABLED.equals(configReader.getExecutionMode()) || httpRequestMessage.getBody() == null) {
+            return responseBuilder.build();
+        }
+        
         try {
-            var data = objectMapper.readValue(bodyRaw, preAuthRequest.getClass());
-            Order order = ((OrderReference) data.getResource()).getObj();
+            ExtensionRequest<OrderReference> request = objectMapper.readValue(httpRequestMessage.getBody().orElseThrow(), ExtensionRequest.class);
+            Order order = ((OrderReference) request.getResource()).getObj();
             if (!configReader.isPreAuth(order.getCountry())) {
-                return request
-                        .createResponseBuilder(HttpStatus.OK)
-                        .build();
+                return responseBuilder.status(HttpStatusType.custom(HttpStatusCode.OK_200)).build();
             }
-            var result = function.apply(data);
-            var responseBody = objectMapper.writeValueAsString(result);
+            ExtensionResponse<OrderUpdateAction> result = function.apply(request);
             if (result.isErrorResponse()) {
-                logger.info("Order creation prevented returning with 400 code");
-                return request
-                        .createResponseBuilder(HttpStatus.BAD_REQUEST)
-                        .header("Content-Type", "application/json")
-                        .body(responseBody)
-                        .build();
+                responseBuilder.status(HttpStatusType.custom(HttpStatusCode.BAD_REQUEST_400));
+                logger.info("PreAuth prevented returning with 400 code:" + result.getMessage());
             }
-            logger.debug("Sending response: {}", responseBody);
-            return request
-                    .createResponseBuilder(HttpStatus.OK)
-                    .header("Content-Type", "application/json")
-                    .body(responseBody)
-                    .build();
+            String rawBody = objectMapper.writeValueAsString(result);
+            logger.debug("Sending response: {}", rawBody);
+            return responseBuilder.body(rawBody).build();
+
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
