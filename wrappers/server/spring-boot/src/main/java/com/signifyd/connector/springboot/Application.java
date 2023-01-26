@@ -29,7 +29,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -45,9 +44,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @SpringBootApplication
 @RestController
 public class Application {
-    private static final String CREATE_ACTION_TYPE = "Create";
-    private static final String UPDATE_ACTION_TYPE = "Update";
-
     private final ConfigReader configReader;
     private final PreAuthFunction preAuthFunction;
     private final ReturnFunction returnFunction;
@@ -85,34 +81,13 @@ public class Application {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @PostMapping("/extensions")
-    public ResponseEntity<ExtensionResponse> extensions(@RequestBody ExtensionRequest request) {
-        switch (request.getResource().getTypeId().toString()) {
-            case OrderReference.ORDER: {
-                ExtensionResponse<OrderUpdateAction> response;
-                switch (request.getAction()) {
-                    case CREATE_ACTION_TYPE: {
-                        response = this.preAuthFunction.apply((ExtensionRequest<OrderReference>) request);
-                        break;
-                    }
-                    case UPDATE_ACTION_TYPE: {
-                        response = this.returnFunction.apply((ExtensionRequest<OrderReference>) request);
-                        break;
-                    }
-                    default:
-                        throw new NotImplementedException(
-                                String.format("Received action type (%s) is not supported", request.getAction()));
-                }
-                if (response.isErrorResponse()) {
-                    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-                }
-                return new ResponseEntity<>(response, HttpStatus.OK);
-            }
-            default:
-                throw new NotImplementedException(
-                        String.format("Received resource type (%s) is not supported",
-                                request.getResource().getTypeId()));
+    @PostMapping("/return/attempt")
+    public ResponseEntity<ExtensionResponse<OrderUpdateAction>> returnAttempt(@RequestBody ExtensionRequest<OrderReference> request) {
+        ExtensionResponse<OrderUpdateAction> response = this.returnFunction.apply(request);
+        if (response.isErrorResponse()) {
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping(value = "/subscriptions/pubsub",

@@ -1,6 +1,5 @@
 package com.signifyd.ctconnector.wrapper.gcp.handler;
 
-import com.commercetools.api.models.order.Order;
 import com.commercetools.api.models.order.OrderReference;
 import com.commercetools.api.models.order.OrderUpdateAction;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,7 +9,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
-import com.signifyd.ctconnector.function.PreAuthFunction;
+import com.signifyd.ctconnector.function.ReturnFunction;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.ExtensionRequest;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.ExtensionResponse;
 import com.signifyd.ctconnector.function.config.ConfigReader;
@@ -24,8 +23,8 @@ import java.util.stream.Collectors;
 import ch.qos.logback.classic.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PreAuthHandler implements HttpFunction {
-    private static final PreAuthFunction function = new PreAuthFunction();
+public class ReturnHandler implements HttpFunction {
+    private static final ReturnFunction function = new ReturnFunction();
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final ConfigReader configReader = new ConfigReader();
     private final Logger logger = (Logger) LoggerFactory.getLogger(getClass().getName());
@@ -43,15 +42,10 @@ public class PreAuthHandler implements HttpFunction {
 
         try {
             ExtensionRequest<OrderReference> request = objectMapper.readValue(requestBody, ExtensionRequest.class);
-            Order order = ((OrderReference) request.getResource()).getObj();
-            if (!configReader.isPreAuth(order.getCountry())) {
-                httpResponse.setStatusCode(HttpStatusCode.OK_200);
-                return;
-            }
             ExtensionResponse<OrderUpdateAction> result = function.apply(request);
             if (result.isErrorResponse()) {
                 httpResponse.setStatusCode(HttpStatusCode.BAD_REQUEST_400);
-                logger.info("PreAuth prevented returning with 400 code:" + result.getMessage());
+                logger.info("Return prevented returning with 400 code:" + result.getMessage());
             }
             String rawBody = objectMapper.writeValueAsString(result);
             PrintWriter writer = new PrintWriter(httpResponse.getWriter());
