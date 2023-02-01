@@ -24,17 +24,24 @@ public final class CustomFields {
     public final static String ORDER_CHANNEL = "orderChannel";
     public final static String CLIENT_IP_ADDRESS = "clientIpAddress";
     public final static String ORDER_URL_FIELD = "signifydOrderUrl";
+    public final static String SIGNIFYD_RETURNS_RAW_DECISION = "signifydReturnsRawDecision";
+    public final static String SIGNIFYD_RETURNS_CHECKPOINT_ACTION = "signifydReturnsCheckpointAction";
 
-
-    //Payment Custom Fields
+    // Payment Custom Fields
     public final static String CARD_HOLDER_NAME = "cardHolderName";
     public final static String CARD_BIN = "cardBin";
     public final static String CARD_LAST_FOUR = "cardLastFour";
     public final static String CARD_EXPIRY_MONTH = "cardExpiryMonth";
     public final static String CARD_EXPIRY_YEAR = "cardExpiryYear";
 
-    //API Extension
+    // Order Return Item Custom Fields
+    public final static String RETURN_ITEM_RAW_DECISION = "rawDecision";
+
+    // API Extension
     public final static String INVALID_INPUT = "InvalidInput";
     public final static String FAILED_VALIDATION = "FailedValidation";
 
+    // Order Custom Type
+    public final static String SIGNIFYD_ORDER_TYPE_KEY = "signifyd-order-type";
+    public final static String SIGNIFYD_RETURN_ITEM_TYPE = "signifyd-return-item-type";
 }

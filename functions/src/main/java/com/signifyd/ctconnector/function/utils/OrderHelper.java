@@ -2,15 +2,16 @@ package com.signifyd.ctconnector.function.utils;
 
 import com.commercetools.api.models.customer.Customer;
 import com.commercetools.api.models.order.Order;
+import com.commercetools.api.models.order.ReturnInfo;
 import com.signifyd.ctconnector.function.config.model.phoneNumber.PhoneNumberField;
 import com.signifyd.ctconnector.function.constants.CustomFields;
-import java.util.UUID;
 
 public class OrderHelper {
 
     private static boolean isOrderSentToSignifyd(Order order) {
-        Object isSentToSignifydField = order.getCustom().getFields().values().get(CustomFields.IS_SENT_TO_SIGNIFYD);
-        return isSentToSignifydField != null && isSentToSignifydField.toString().equals("true");
+        return order.getCustom() != null
+                && order.getCustom().getFields().values().get(CustomFields.IS_SENT_TO_SIGNIFYD) != null
+                &&  order.getCustom().getFields().values().get(CustomFields.IS_SENT_TO_SIGNIFYD).toString().equals("true");
     }
 
     public static void controlOrderSentToSignifyd(Order order) throws RuntimeException {
@@ -23,7 +24,10 @@ public class OrderHelper {
         String shippingAddressPhoneNumber = order.getShippingAddress().getPhone();
         String billingAddressPhoneNumber = order.getBillingAddress().getPhone();
         String customerPhoneNumber = getCustomerPhoneNumber(customer, phoneNumberField);
-        return (billingAddressPhoneNumber != null && !billingAddressPhoneNumber.equals("")) ? billingAddressPhoneNumber : ((shippingAddressPhoneNumber != null && !shippingAddressPhoneNumber.equals("")) ? shippingAddressPhoneNumber : customerPhoneNumber);
+        return (billingAddressPhoneNumber != null && !billingAddressPhoneNumber.equals("")) ? billingAddressPhoneNumber
+                : ((shippingAddressPhoneNumber != null && !shippingAddressPhoneNumber.equals(""))
+                        ? shippingAddressPhoneNumber
+                        : customerPhoneNumber);
     }
 
     public static String getConfirmationEmail(Customer customer, Order order) {
@@ -38,24 +42,27 @@ public class OrderHelper {
     }
 
     public static String getCustomerPhoneNumber(Customer customer, PhoneNumberField phoneNumberField) {
-        if (customer != null && phoneNumberField != null) {
-            Object customerPhoneNumber = customer.getCustom().getFields().values().get(phoneNumberField.getCustomerPhoneNumberField());
+        if (customer != null && customer.getCustom() != null && phoneNumberField != null) {
+            Object customerPhoneNumber = customer.getCustom().getFields().values()
+                    .get(phoneNumberField.getCustomerPhoneNumberField());
             return customerPhoneNumber != null ? customerPhoneNumber.toString() : null;
         }
         return null;
     }
 
     public static String getMostRecentPaymentIdFromOrder(Order order) {
-        if (order.getPaymentInfo() == null || order.getPaymentInfo().getPayments().isEmpty()) {
-            return null;
+        if (order.getPaymentInfo() != null && !order.getPaymentInfo().getPayments().isEmpty()) {
+            var count = order.getPaymentInfo().getPayments().size();
+            return order.getPaymentInfo().getPayments().get(count - 1).getId();
         }
-        var count = order.getPaymentInfo().getPayments().size();
-        return order.getPaymentInfo().getPayments().get(count - 1).getId();
-
+        return null;
     }
 
-    public static Order initializeOrder(Order order) {
-        order.getCustom().getFields().values().put(CustomFields.CHECKOUT_ID, UUID.randomUUID().toString());
-        return order;
+    public static ReturnInfo getMostRecentReturnInfoFromOrder(Order order) {
+        if (order.getReturnInfo() != null && !order.getReturnInfo().isEmpty()) {
+            int count = order.getReturnInfo().size();
+            return order.getReturnInfo().get(count - 1);
+        }
+        return null;
     }
 }

@@ -3,7 +3,7 @@ package com.signifyd.ctconnector.wrapper.aws.response;
 import lombok.Data;
 
 @Data
-public class PreauthResponse {
+public class ExtensionsResponse {
     private int statusCode;
     private String body;
 }

@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.signifyd.connector.springboot.models.SnsNotificationMessage;
 import com.signifyd.connector.springboot.models.SnsSubscriptionConfirmationMessage;
+import com.signifyd.ctconnector.function.ReturnFunction;
 import com.signifyd.ctconnector.function.PreAuthFunction;
 import com.signifyd.ctconnector.function.SubscriptionFunction;
 import com.signifyd.ctconnector.function.WebhookFunction;
@@ -24,10 +25,10 @@ import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.Extensi
 import com.signifyd.ctconnector.function.config.PropertyReader;
 import com.signifyd.ctconnector.function.constants.SignifydApi;
 import com.signifyd.ctconnector.function.utils.SignifydWebhookValidator;
-import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -37,18 +38,15 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @SpringBootApplication
 @RestController
 public class Application {
-
     private final ConfigReader configReader;
-
     private final PreAuthFunction preAuthFunction;
+    private final ReturnFunction returnFunction;
     private final SubscriptionFunction subscriptionFunction;
     private final WebhookFunction webhookFunction;
     ObjectMapper objectMapper = new ObjectMapper()
@@ -69,6 +67,7 @@ public class Application {
         SignifydMapper signifydMapper = new SignifydMapper();
 
         this.preAuthFunction = new PreAuthFunction(configReader, commercetoolsClient, signifydClient, propertyReader, signifydMapper);
+        this.returnFunction = new ReturnFunction(configReader, signifydClient, propertyReader, signifydMapper);
         this.subscriptionFunction = new SubscriptionFunction(configReader, commercetoolsClient, signifydClient);
         this.webhookFunction = new WebhookFunction(configReader, commercetoolsClient);
     }
@@ -80,6 +79,15 @@ public class Application {
             return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @PostMapping("/return/attempt")
+    public ResponseEntity<ExtensionResponse<OrderUpdateAction>> returnAttempt(@RequestBody ExtensionRequest<OrderReference> request) {
+        ExtensionResponse<OrderUpdateAction> response = this.returnFunction.apply(request);
+        if (response.isErrorResponse()) {
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping(value = "/subscriptions/pubsub",

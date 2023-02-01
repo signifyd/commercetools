@@ -8,6 +8,7 @@ import com.commercetools.api.models.order.*;
 import com.commercetools.api.models.type.CustomFields;
 import com.commercetools.api.models.type.FieldContainer;
 import com.commercetools.api.models.type.TypeReference;
+import com.commercetools.api.models.type.TypeResourceIdentifier;
 import com.commercetools.api.models.customer.Customer;
 import com.commercetools.api.models.payment.Payment;
 import com.signifyd.ctconnector.function.config.ConfigReader;
@@ -168,5 +169,20 @@ public class CommercetoolsClient {
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Order setCustomType(Order order, String customTypeKey, FieldContainer fields) {
+        List<OrderUpdateAction> actionList = new ArrayList<>();
+
+        TypeResourceIdentifier customType = TypeResourceIdentifier.builder()
+                .key(customTypeKey)
+                .build();
+
+        actionList.add(OrderSetCustomTypeActionBuilder.of()
+                    .fields(fields)
+                    .type(customType)
+                    .build());
+
+        return orderUpdate(order, actionList);
     }
 }

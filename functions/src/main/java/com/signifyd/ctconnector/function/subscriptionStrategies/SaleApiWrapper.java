@@ -40,7 +40,13 @@ public class SaleApiWrapper {
     private final Payment payment;
     private final Logger logger = (Logger) LoggerFactory.getLogger(getClass().getName());
 
-    public SaleApiWrapper(CommercetoolsClient commercetoolsClient, SignifydClient signifydClient, ConfigReader configReader, Order order, Payment payment) {
+    public SaleApiWrapper(
+        CommercetoolsClient commercetoolsClient,
+        SignifydClient signifydClient,
+        ConfigReader configReader,
+        Order order,
+        Payment payment
+    ) {
         this.commercetoolsClient = commercetoolsClient;
         this.signifydClient = signifydClient;
         this.configReader = configReader;
@@ -54,15 +60,19 @@ public class SaleApiWrapper {
         if (configReader.isPreAuth(order.getCountry())) {
             return;
         }
-        if (order.getCustom().getFields().values().get(CustomFields.CHECKOUT_ID) == null) setOrderCheckoutId(order);
-        Customer customer = order.getCustomerId() != null ? this.commercetoolsClient.getCustomerById(order.getCustomerId()) : null;
         if (payment != null && !isOrderEligibleToProcess(order, payment)) {
             setFailOrderCustomFields(order);
             return;
         }
-        if (!isOrderReadyForSaleApiCall(order, payment)) {
+        if (payment != null
+                && !payment.getTransactions().isEmpty()
+                && !isOrderReadyForSaleApiCall(order, payment)
+        ) {
             return;
         }
+        Customer customer = order.getCustomerId() != null
+                ? this.commercetoolsClient.getCustomerById(order.getCustomerId())
+                : null;
         sendSaleRequest(order, payment, customer);
     }
 
@@ -109,7 +119,8 @@ public class SaleApiWrapper {
         if (order.getCustom().getFields().values().containsKey(CustomFields.IS_SENT_TO_SIGNIFYD)) {
             return false;
         }
-        if (this.configReader.getExcludedPaymentMethods().stream().anyMatch(p -> p.equals(payment.getPaymentMethodInfo().getMethod()))) {
+        if (this.configReader.getExcludedPaymentMethods().stream()
+                .anyMatch(p -> p.equals(payment.getPaymentMethodInfo().getMethod()))) {
             return false;
         }
         return true;
@@ -127,19 +138,17 @@ public class SaleApiWrapper {
 
     private Order setSuccessOrderCustomFields(Order order) {
         TypedMoney totalPrice = order.getTotalPrice();
-        FieldContainer fields = FieldContainer.builder().addValue(CustomFields.CURRENT_PRICE, Money.builder().centAmount(totalPrice.getCentAmount()).currencyCode(totalPrice.getCurrencyCode()).build()).addValue(CustomFields.IS_SENT_TO_SIGNIFYD, true).build();
+        FieldContainer fields = FieldContainer.builder()
+                .addValue(CustomFields.CURRENT_PRICE,
+                        Money.builder().centAmount(totalPrice.getCentAmount())
+                                .currencyCode(totalPrice.getCurrencyCode()).build())
+                .addValue(CustomFields.IS_SENT_TO_SIGNIFYD, true).build();
 
         return this.commercetoolsClient.setCustomFields(order, fields);
     }
 
     private Order setFailOrderCustomFields(Order order) {
         FieldContainer fields = FieldContainer.builder().addValue(CustomFields.IS_SENT_TO_SIGNIFYD, false).build();
-
-        return this.commercetoolsClient.setCustomFields(order, fields);
-    }
-
-    private Order setOrderCheckoutId(Order order) {
-        FieldContainer fields = FieldContainer.builder().addValue(CustomFields.CHECKOUT_ID, UUID.randomUUID().toString()).build();
 
         return this.commercetoolsClient.setCustomFields(order, fields);
     }

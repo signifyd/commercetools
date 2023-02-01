@@ -32,7 +32,7 @@ public class SubscriptionsSNSHandler implements RequestHandler<SNSEvent, Object>
         logger.log(snsMessage);
         try {
             var data = objectMapper.readValue(snsMessage, Message.class);
-            var result = function.apply(data);
+            function.apply(data);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

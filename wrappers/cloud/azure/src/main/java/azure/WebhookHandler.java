@@ -15,7 +15,6 @@ import com.signifyd.ctconnector.function.adapter.signifyd.models.webhook.Webhook
 import com.signifyd.ctconnector.function.config.ConfigReader;
 import com.signifyd.ctconnector.function.config.model.ExecutionMode;
 import com.signifyd.ctconnector.function.constants.SignifydApi;
-import com.signifyd.ctconnector.function.utils.SignifydWebhookValidator;
 import org.slf4j.LoggerFactory;
 
 /**
