@@ -108,11 +108,17 @@ public class SignifydMapper {
     }
 
     public Device mapDeviceFromCommercetools(Order order) {
-        return Device.builder()
-                .clientIpAddress(order.getCustom().getFields().values().get(CustomFields.CLIENT_IP_ADDRESS)
-                        .toString())
-                .sessionId(order.getCustom().getFields().values().get(CustomFields.SESSION_ID).toString())
-                .build();
+        if (order.getCustom() != null
+                && order.getCustom().getFields().values().get(CustomFields.SESSION_ID) != null
+                && order.getCustom().getFields().values().get(CustomFields.CLIENT_IP_ADDRESS) != null
+        ) {
+            return Device.builder()
+                    .clientIpAddress(order.getCustom().getFields().values().get(CustomFields.CLIENT_IP_ADDRESS)
+                            .toString())
+                    .sessionId(order.getCustom().getFields().values().get(CustomFields.SESSION_ID).toString())
+                    .build();
+        }
+        return null;
     }
 
     public UserAccount mapUserAccountFromCommercetools(Customer customer, PhoneNumberField phoneNumberField) {

@@ -41,8 +41,7 @@ public class ReturnHandler implements RequestHandler<Map<String, Object>, Extens
 
         try {
             ExtensionRequest<OrderReference> request = objectMapper.readValue(event.get("body").toString(), ExtensionRequest.class);
-            ExtensionResponse<OrderUpdateAction> result = new ExtensionResponse<OrderUpdateAction>();
-            result = function.apply(request);
+            ExtensionResponse<OrderUpdateAction> result = function.apply(request);
             if (result.isErrorResponse()) {
                 response.setStatusCode(HttpStatusCode.BAD_REQUEST_400);
                 logger.info("Return prevented returning with 400 code:" + result.getMessage());

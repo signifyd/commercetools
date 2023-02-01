@@ -37,7 +37,7 @@ public class SubscriptionsSQSHandler implements RequestHandler<SQSEvent, Void> {
             logger.log("SQS Message Body : " + msg.getBody());
             try {
                 var data = objectMapper.readValue(msg.getBody(), Message.class);
-                var result = function.apply(data);
+                function.apply(data);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }

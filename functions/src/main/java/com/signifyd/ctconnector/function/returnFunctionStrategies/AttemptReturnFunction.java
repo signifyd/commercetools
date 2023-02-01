@@ -18,7 +18,6 @@ import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.attempt
 import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.attemptReturn.AttemptReturnResponse;
 import com.signifyd.ctconnector.function.config.ConfigReader;
 import com.signifyd.ctconnector.function.constants.CustomFields;
-import com.signifyd.ctconnector.function.utils.OrderHelper;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -54,17 +53,13 @@ public class AttemptReturnFunction implements ReturnFunctionStrategy {
     }
 
     private AttemptReturnRequestDraft generateRequest(Order order, ReturnInfo returnInfo) {
-        var draftBuilder = AttemptReturnRequestDraft
+        return AttemptReturnRequestDraft
                 .builder()
                 .orderId(order.getId())
                 .returnId(returnInfo.getReturnTrackingId())
-                .returnedItems(signifydMapper.mapReturnedProductsFromCommercetools(order.getLineItems(), returnInfo));
-
-        if (OrderHelper.hasOrderDeviceFingerprint(order)) {
-            draftBuilder.device(signifydMapper.mapDeviceFromCommercetools(order));
-        }
-
-        return draftBuilder.build();
+                .returnedItems(signifydMapper.mapReturnedProductsFromCommercetools(order.getLineItems(), returnInfo))
+                .device(signifydMapper.mapDeviceFromCommercetools(order))
+                .build();
     }
 
     private ExtensionResponse<OrderUpdateAction> generateResponse(

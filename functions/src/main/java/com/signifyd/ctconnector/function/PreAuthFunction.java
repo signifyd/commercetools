@@ -1,6 +1,7 @@
 package com.signifyd.ctconnector.function;
 
 import ch.qos.logback.classic.Logger;
+
 import com.commercetools.api.models.common.Money;
 import com.commercetools.api.models.customer.Customer;
 import com.commercetools.api.models.order.*;
@@ -77,16 +78,17 @@ public class PreAuthFunction
     @Override
     public ExtensionResponse<OrderUpdateAction> apply(ExtensionRequest<OrderReference> request) {
         validateExtensionRequest(request);
-        ExtensionResponse<OrderUpdateAction> response = new ExtensionResponse<>();
         Order order = request.getResource().getObj();
         Payment payment = this.commercetoolsClient.getPaymentById(OrderHelper.getMostRecentPaymentIdFromOrder(order));
 
-        if (!isOrderReadyForCheckoutApiCall(order, payment)) {
+        if (!isOrderReadyForCheckoutApiCall(order)) {
+            ExtensionResponse<OrderUpdateAction> response = new ExtensionResponse<>();
             response.setActions(new ArrayList<>());
             return response;
         }
 
-        if (!isOrderEligibleToProcess(payment)) {
+        if (payment != null && !isOrderEligibleToProcess(payment)) {
+            ExtensionResponse<OrderUpdateAction> response = new ExtensionResponse<>();
             response.addAction(OrderSetCustomFieldActionBuilder.of()
                     .name(CustomFields.IS_SENT_TO_SIGNIFYD)
                     .value(false)
@@ -95,13 +97,11 @@ public class PreAuthFunction
         }
 
         order.getCustom().getFields().values().put(CustomFields.CHECKOUT_ID, UUID.randomUUID().toString());
-
         Customer customer = order.getCustomerId() != null
                 ? this.commercetoolsClient.getCustomerById(order.getCustomerId())
                 : null;
 
-        response = sendRequest(order, payment, customer);
-        return response;
+        return sendRequest(order, payment, customer);
     }
 
     private CheckoutRequestDraft generateRequest(Order order, Payment payment, Customer customer) {
@@ -241,10 +241,8 @@ public class PreAuthFunction
                 .noneMatch(p -> p.equals(payment.getPaymentMethodInfo().getMethod()));
     }
 
-    private boolean isOrderReadyForCheckoutApiCall(Order order, Payment payment) {
-        return payment != null &&
-                order.getCustom() != null &&
-                order.getCustom().getType().getTypeId().name() != CustomFields.SIGNIFYD_ORDER_TYPE_KEY;
+    private boolean isOrderReadyForCheckoutApiCall(Order order) {
+        return order.getCustom() != null && order.getCustom().getFields().values().get(CustomFields.ORDER_CHANNEL) != null;
     }
 
     private void validateExtensionRequest(ExtensionRequest<OrderReference> extensionRequest) {
