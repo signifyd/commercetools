@@ -40,8 +40,13 @@ public class SaleApiWrapper {
     private final Payment payment;
     private final Logger logger = (Logger) LoggerFactory.getLogger(getClass().getName());
 
-    public SaleApiWrapper(CommercetoolsClient commercetoolsClient, SignifydClient signifydClient,
-            ConfigReader configReader, Order order, Payment payment) {
+    public SaleApiWrapper(
+        CommercetoolsClient commercetoolsClient,
+        SignifydClient signifydClient,
+        ConfigReader configReader,
+        Order order,
+        Payment payment
+    ) {
         this.commercetoolsClient = commercetoolsClient;
         this.signifydClient = signifydClient;
         this.configReader = configReader;
@@ -59,7 +64,10 @@ public class SaleApiWrapper {
             setFailOrderCustomFields(order);
             return;
         }
-        if (!isOrderReadyForSaleApiCall(order, payment)) {
+        if (payment != null
+                && !payment.getTransactions().isEmpty()
+                && !isOrderReadyForSaleApiCall(order, payment)
+        ) {
             return;
         }
         Customer customer = order.getCustomerId() != null
@@ -88,6 +96,7 @@ public class SaleApiWrapper {
                         .generateTransactions())
                 .purchase(signifydMapper.mapPurchaseFromCommercetools(customer, order,
                         configReader.getPhoneNumberFieldMapping()))
+                .device(signifydMapper.mapDeviceFromCommercetools(order))
                 .userAccount(signifydMapper.mapUserAccountFromCommercetools(customer,
                         configReader.getPhoneNumberFieldMapping()))
                 .merchantPlatform(MerchantPlatform.builder().name(SignifydApi.MERCHANT_PLATFORM)
@@ -95,11 +104,6 @@ public class SaleApiWrapper {
                 .signifydClient(SignifydClientInfo.builder().application(SignifydApi.SIGNIFYD_CLIENT_INFO)
                         .version(this.propertyReader.getSignifydClientVersion()).build())
                 .coverageRequests(Collections.singletonList(CoverageRequests.FRAUD.name()));
-
-        if (order.getCustom().getFields().values().get(CustomFields.SESSION_ID) != null &&
-                order.getCustom().getFields().values().get(CustomFields.CLIENT_IP_ADDRESS) != null) {
-            builder.device(signifydMapper.mapDeviceFromCommercetools(order));
-        }
 
         if (configReader.isRecommendationOnly(order.getCountry())) {
             builder.coverageRequests(Collections.singletonList(CoverageRequests.NONE.name()));

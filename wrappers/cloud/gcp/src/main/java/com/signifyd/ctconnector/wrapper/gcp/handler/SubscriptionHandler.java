@@ -41,7 +41,7 @@ public class SubscriptionHandler implements BackgroundFunction<Message> {
 
         try {
             var data = objectMapper.readValue(messageString, com.commercetools.api.models.message.Message.class);
-            var result = function.apply(data);
+            function.apply(data);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

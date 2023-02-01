@@ -9,9 +9,9 @@ import com.signifyd.ctconnector.function.constants.CustomFields;
 public class OrderHelper {
 
     private static boolean isOrderSentToSignifyd(Order order) {
-        if (order.getCustom() == null) return false;
-        Object isSentToSignifydField = order.getCustom().getFields().values().get(CustomFields.IS_SENT_TO_SIGNIFYD);
-        return isSentToSignifydField != null && isSentToSignifydField.toString().equals("true");
+        return order.getCustom() != null
+                && order.getCustom().getFields().values().get(CustomFields.IS_SENT_TO_SIGNIFYD) != null
+                &&  order.getCustom().getFields().values().get(CustomFields.IS_SENT_TO_SIGNIFYD).toString().equals("true");
     }
 
     public static void controlOrderSentToSignifyd(Order order) throws RuntimeException {
@@ -51,17 +51,11 @@ public class OrderHelper {
     }
 
     public static String getMostRecentPaymentIdFromOrder(Order order) {
-        if (order.getPaymentInfo() == null || order.getPaymentInfo().getPayments().isEmpty()) {
-            return null;
+        if (order.getPaymentInfo() != null && !order.getPaymentInfo().getPayments().isEmpty()) {
+            var count = order.getPaymentInfo().getPayments().size();
+            return order.getPaymentInfo().getPayments().get(count - 1).getId();
         }
-        var count = order.getPaymentInfo().getPayments().size();
-        return order.getPaymentInfo().getPayments().get(count - 1).getId();
-    }
-
-    public static boolean hasOrderDeviceFingerprint(Order order) {
-        return order.getCustom() != null
-                && order.getCustom().getFields().values().get(CustomFields.CLIENT_IP_ADDRESS) != null
-                && order.getCustom().getFields().values().get(CustomFields.SESSION_ID) != null;
+        return null;
     }
 
     public static ReturnInfo getMostRecentReturnInfoFromOrder(Order order) {
