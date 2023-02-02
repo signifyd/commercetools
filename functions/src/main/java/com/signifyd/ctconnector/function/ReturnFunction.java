@@ -61,7 +61,7 @@ public class ReturnFunction
         ReturnFunctionStrategy function;
         if (returnInfo.getItems().get(0).getCustom() != null
                 && returnInfo.getItems().get(0).getCustom().getFields().values()
-                        .get(CustomFields.RETURN_ITEM_RAW_DECISION) != null) {
+                        .get(CustomFields.RETURN_ITEM_RAW_ATTEMPT_RESPONSE) != null) {
             function = new ExecuteReturnFunction(configReader, signifydClient, signifydMapper);
         } else {
             function = new AttemptReturnFunction(configReader, signifydClient, signifydMapper);

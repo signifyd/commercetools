@@ -35,7 +35,7 @@ public final class CustomFields {
     public final static String CARD_EXPIRY_YEAR = "cardExpiryYear";
 
     // Order Return Item Custom Fields
-    public final static String RETURN_ITEM_RAW_DECISION = "rawDecision";
+    public final static String RETURN_ITEM_RAW_ATTEMPT_RESPONSE = "rawAttemptResponse";
 
     // API Extension
     public final static String INVALID_INPUT = "InvalidInput";
