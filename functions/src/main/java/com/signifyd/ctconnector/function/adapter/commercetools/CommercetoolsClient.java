@@ -103,7 +103,6 @@ public class CommercetoolsClient {
                 orderVersion = recentOrder.getVersion();
             }
             try {
-
                 response = this.projectApiRoot.orders().withId(order.getId()).post(
                                 OrderUpdate.builder()
                                         .version(orderVersion)
@@ -182,6 +181,37 @@ public class CommercetoolsClient {
                     .fields(fields)
                     .type(customType)
                     .build());
+
+        return orderUpdate(order, actionList);
+    }
+
+    public Order addReturnInfo(Order order, ReturnInfo returnInfo) {
+        List<OrderUpdateAction> actionList = new ArrayList<>();
+        List<ReturnItemDraft> items = new ArrayList<>();
+
+        for (ReturnItem returnItem : returnInfo.getItems()) {
+            ReturnItemDraftBuilder returnItemDraftBuilder = ReturnItemDraftBuilder.of();
+            if (returnItem.getType().equals(LineItemReturnItem.LINE_ITEM_RETURN_ITEM)) {
+                LineItemReturnItem lineItemReturnItem = (LineItemReturnItem) returnItem;
+                returnItemDraftBuilder.lineItemId(lineItemReturnItem.getLineItemId());
+            } else if (returnItem.getType().equals(CustomLineItemReturnItem.CUSTOM_LINE_ITEM_RETURN_ITEM)) {
+                CustomLineItemReturnItem customlineItemReturnItem = (CustomLineItemReturnItem) returnItem;
+                returnItemDraftBuilder.customLineItemId(customlineItemReturnItem.getCustomLineItemId());
+            }
+
+            ReturnItemDraft returnItemDraft = returnItemDraftBuilder
+                    .comment(returnItem.getComment())
+                    .quantity(returnItem.getQuantity())
+                    .shipmentState(ReturnShipmentState.RETURNED)
+                    .build();
+
+            items.add(returnItemDraft);
+        }
+
+        actionList.add(OrderAddReturnInfoActionBuilder.of()
+            .returnTrackingId(returnInfo.getReturnTrackingId())
+            .items(items)
+            .build());
 
         return orderUpdate(order, actionList);
     }
