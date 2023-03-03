@@ -12,9 +12,13 @@ import com.signifyd.connector.springboot.models.SnsNotificationMessage;
 import com.signifyd.connector.springboot.models.SnsSubscriptionConfirmationMessage;
 import com.signifyd.ctconnector.function.ReturnFunction;
 import com.signifyd.ctconnector.function.PreAuthFunction;
+import com.signifyd.ctconnector.function.ProxyFunction;
 import com.signifyd.ctconnector.function.SubscriptionFunction;
 import com.signifyd.ctconnector.function.WebhookFunction;
 import com.signifyd.ctconnector.function.adapter.commercetools.CommercetoolsClient;
+import com.signifyd.ctconnector.function.adapter.commercetools.models.proxy.ProxyRequest;
+import com.signifyd.ctconnector.function.adapter.commercetools.models.proxy.ProxyResource;
+import com.signifyd.ctconnector.function.adapter.commercetools.models.proxy.ProxyResponse;
 import com.signifyd.ctconnector.function.adapter.signifyd.SignifydClient;
 import com.signifyd.ctconnector.function.adapter.signifyd.mapper.SignifydMapper;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.DecisionResponse;
@@ -46,6 +50,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class Application {
     private final ConfigReader configReader;
     private final PreAuthFunction preAuthFunction;
+    private final ProxyFunction proxyFunction;
     private final ReturnFunction returnFunction;
     private final SubscriptionFunction subscriptionFunction;
     private final WebhookFunction webhookFunction;
@@ -67,6 +72,7 @@ public class Application {
         SignifydMapper signifydMapper = new SignifydMapper();
 
         this.preAuthFunction = new PreAuthFunction(configReader, commercetoolsClient, signifydClient, propertyReader, signifydMapper);
+        this.proxyFunction = new ProxyFunction(commercetoolsClient);
         this.returnFunction = new ReturnFunction(configReader, signifydClient, propertyReader, signifydMapper);
         this.subscriptionFunction = new SubscriptionFunction(configReader, commercetoolsClient, signifydClient);
         this.webhookFunction = new WebhookFunction(configReader, commercetoolsClient);
@@ -88,6 +94,13 @@ public class Application {
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/proxy")
+    public ResponseEntity<ProxyResponse> proxy(@RequestBody ProxyRequest<ProxyResource> request) {
+        ProxyResponse response = this.proxyFunction.apply(request);
+        HttpStatus httpStatus = response.isSucceed() ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
+        return new ResponseEntity<>(response, httpStatus);
     }
 
     @PostMapping(value = "/subscriptions/pubsub",

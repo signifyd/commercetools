@@ -7,15 +7,16 @@ import com.commercetools.api.models.type.FieldContainer;
 import com.commercetools.api.models.type.TypeResourceIdentifier;
 import com.commercetools.api.models.type.TypeResourceIdentifierBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.signifyd.ctconnector.function.adapter.commercetools.enums.ReturnInfoTransition;
 import com.signifyd.ctconnector.function.adapter.signifyd.SignifydClient;
 import com.signifyd.ctconnector.function.adapter.signifyd.exception.Signifyd4xxException;
 import com.signifyd.ctconnector.function.adapter.signifyd.exception.Signifyd5xxException;
 import com.signifyd.ctconnector.function.adapter.signifyd.mapper.SignifydMapper;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.ExtensionResponse;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.checkoutResponse.Action;
-import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.checkoutResponse.Decision;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.attemptReturn.AttemptReturnRequestDraft;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.attemptReturn.AttemptReturnResponse;
+import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.attemptReturn.CheckpointAction;
 import com.signifyd.ctconnector.function.config.ConfigReader;
 import com.signifyd.ctconnector.function.constants.CustomFields;
 import org.slf4j.LoggerFactory;
@@ -24,14 +25,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AttemptReturnFunction implements ReturnFunctionStrategy {
+public class AttemptReturnStrategy implements ReturnStrategy {
 
     protected final ConfigReader configReader;
     protected final SignifydClient signifydClient;
     protected final SignifydMapper signifydMapper;
     protected final Logger logger = (Logger) LoggerFactory.getLogger(getClass().getName());
 
-    public AttemptReturnFunction(
+    public AttemptReturnStrategy(
             ConfigReader configReader,
             SignifydClient signifydClient,
             SignifydMapper signifydMapper) {
@@ -64,17 +65,19 @@ public class AttemptReturnFunction implements ReturnFunctionStrategy {
 
     private ExtensionResponse<OrderUpdateAction> generateResponse(
             Order order,
-            ReturnInfo newReturnInfo,
-            AttemptReturnResponse attemptReturnResponse) throws IOException {
+            ReturnInfo returnInfo,
+            AttemptReturnResponse attemptReturnResponse
+    ) throws IOException {
         ObjectMapper objMapper = new ObjectMapper();
         ExtensionResponse<OrderUpdateAction> response = new ExtensionResponse<OrderUpdateAction>();
         TypeResourceIdentifier type = TypeResourceIdentifierBuilder.of().key(CustomFields.SIGNIFYD_RETURN_ITEM_TYPE)
                 .build();
 
-        for (ReturnItem returnItem : newReturnInfo.getItems()) {
+        for (ReturnItem returnItem : returnInfo.getItems()) {
             FieldContainer fields = FieldContainer.builder()
-                    .addValue(CustomFields.RETURN_ITEM_RAW_DECISION,
-                            objMapper.writeValueAsString(attemptReturnResponse.getDecision()))
+                    .addValue(CustomFields.RETURN_ITEM_RAW_ATTEMPT_RESPONSE,
+                            objMapper.writeValueAsString(attemptReturnResponse))
+                    .addValue(CustomFields.RETURN_ITEM_TRANSITION, ReturnInfoTransition.EXECUTE.name())
                     .build();
             response.addAction(
                     OrderSetReturnItemCustomTypeAction.builder()
@@ -84,30 +87,30 @@ public class AttemptReturnFunction implements ReturnFunctionStrategy {
                             .build());
         }
 
-        List<Decision> prevReturnsDecisions = new ArrayList<>();
-        List<Action> prevReturnCheckpointActions = new ArrayList<>();
-        for (ReturnInfo returnInfo : order.getReturnInfo().subList(0, order.getReturnInfo().size() - 1)) {
-            ReturnItem firstReturnItem = returnInfo.getItems().get(0);
-            String rawDecision = firstReturnItem.getCustom().getFields().values()
-                    .get(CustomFields.RETURN_ITEM_RAW_DECISION).toString();
-            Decision decision = objMapper.readValue(rawDecision, Decision.class);
-            Action checkpointAction = decision.getCheckpointAction();
-            prevReturnsDecisions.add(decision);
-            prevReturnCheckpointActions.add(checkpointAction);
+        List<AttemptReturnResponse> prevAttemptResponses = new ArrayList<>();
+        List<CheckpointAction> prevCheckpointActions = new ArrayList<>();
+        for (ReturnInfo subReturnInfo : order.getReturnInfo().subList(0, order.getReturnInfo().size() - 1)) {
+            String rawAttemptResponse = subReturnInfo.getItems().get(0).getCustom().getFields().values()
+                    .get(CustomFields.RETURN_ITEM_RAW_ATTEMPT_RESPONSE).toString();
+            AttemptReturnResponse attemptResponse = objMapper.readValue(rawAttemptResponse, AttemptReturnResponse.class);
+            prevAttemptResponses.add(attemptResponse);
+            Action action = attemptResponse.getDecision().getCheckpointAction();
+            CheckpointAction checkpointAction = CheckpointAction.builder().returnId(subReturnInfo.getReturnTrackingId()).checkpointAction(action).build();
+            prevCheckpointActions.add(checkpointAction);
         }
-        Decision decision = attemptReturnResponse.getDecision();
-        Action checkpointAction = decision.getCheckpointAction();
-        prevReturnsDecisions.add(decision);
-        prevReturnCheckpointActions.add(checkpointAction);
+        prevAttemptResponses.add(attemptReturnResponse);
+        Action action = attemptReturnResponse.getDecision().getCheckpointAction();
+        CheckpointAction checkpointAction = CheckpointAction.builder().returnId(returnInfo.getReturnTrackingId()).checkpointAction(action).build();
+        prevCheckpointActions.add(checkpointAction);
 
         response.addAction(
                 OrderSetCustomFieldActionBuilder.of()
                         .name(CustomFields.SIGNIFYD_RETURNS_RAW_DECISION)
-                        .value(objMapper.writerWithDefaultPrettyPrinter().writeValueAsString(prevReturnsDecisions)).build());
+                        .value(objMapper.writerWithDefaultPrettyPrinter().writeValueAsString(prevAttemptResponses)).build());
         response.addAction(
                 OrderSetCustomFieldActionBuilder.of()
                         .name(CustomFields.SIGNIFYD_RETURNS_CHECKPOINT_ACTION)
-                        .value(objMapper.writerWithDefaultPrettyPrinter().writeValueAsString(prevReturnCheckpointActions)).build());
+                        .value(objMapper.writerWithDefaultPrettyPrinter().writeValueAsString(prevCheckpointActions)).build());
 
         return response;
     }
@@ -115,6 +118,6 @@ public class AttemptReturnFunction implements ReturnFunctionStrategy {
     private boolean isReturnTrackingIdValid(List<ReturnInfo> returnInfoList, String returnTrackingId) {
         return returnTrackingId != null
                 && returnInfoList.subList(0, returnInfoList.size() - 1).stream()
-                        .noneMatch(ri -> ri.getReturnTrackingId().equals(returnTrackingId));
+                        .noneMatch(ri -> ri.getReturnTrackingId() == null || ri.getReturnTrackingId().equals(returnTrackingId));
     }
 }
