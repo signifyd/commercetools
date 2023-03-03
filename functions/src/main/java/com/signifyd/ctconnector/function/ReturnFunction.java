@@ -5,6 +5,7 @@ import io.vrap.rmf.base.client.http.HttpStatusCode;
 
 import com.commercetools.api.models.common.LocalizedString;
 import com.commercetools.api.models.order.*;
+import com.signifyd.ctconnector.function.adapter.commercetools.enums.ReturnInfoTransition;
 import com.signifyd.ctconnector.function.adapter.signifyd.SignifydClient;
 import com.signifyd.ctconnector.function.adapter.signifyd.exception.Signifyd4xxException;
 import com.signifyd.ctconnector.function.adapter.signifyd.exception.Signifyd5xxException;
@@ -13,15 +14,16 @@ import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.Extensi
 import com.signifyd.ctconnector.function.config.ConfigReader;
 import com.signifyd.ctconnector.function.config.PropertyReader;
 import com.signifyd.ctconnector.function.constants.CustomFields;
-import com.signifyd.ctconnector.function.returnFunctionStrategies.AttemptReturnFunction;
-import com.signifyd.ctconnector.function.returnFunctionStrategies.ExecuteReturnFunction;
-import com.signifyd.ctconnector.function.returnFunctionStrategies.ReturnFunctionStrategy;
+import com.signifyd.ctconnector.function.returnFunctionStrategies.AttemptReturnStrategy;
+import com.signifyd.ctconnector.function.returnFunctionStrategies.ExecuteReturnStrategy;
+import com.signifyd.ctconnector.function.returnFunctionStrategies.ReturnStrategy;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.ExtensionError;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.ExtensionRequest;
 import com.signifyd.ctconnector.function.utils.OrderHelper;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 public class ReturnFunction
@@ -57,14 +59,32 @@ public class ReturnFunction
             return generateErrorResponse(order.getCountry(), e.getMessage());
         }
 
-        ReturnInfo returnInfo = OrderHelper.getMostRecentReturnInfoFromOrder(order);
-        ReturnFunctionStrategy function;
-        if (returnInfo.getItems().get(0).getCustom() != null
-                && returnInfo.getItems().get(0).getCustom().getFields().values()
-                        .get(CustomFields.RETURN_ITEM_RAW_ATTEMPT_RESPONSE) != null) {
-            function = new ExecuteReturnFunction(configReader, signifydClient, signifydMapper);
+        ReturnInfo returnInfo = null;
+        ReturnInfoTransition transition = ReturnInfoTransition.ATTEMPT;
+        for (ReturnInfo rInfo : order.getReturnInfo()) {
+            if (rInfo.getItems().stream().anyMatch(
+                    rItem -> rItem.getCustom() == null)) {
+                returnInfo = rInfo;
+                transition = ReturnInfoTransition.ATTEMPT;
+                break;
+            } else if (rInfo.getItems().stream().anyMatch(
+                    rItem -> rItem.getShipmentState().equals(ReturnShipmentState.BACK_IN_STOCK)
+                            && rItem.getCustom().getFields().values().get(CustomFields.RETURN_ITEM_TRANSITION)
+                                    .toString().equals(ReturnInfoTransition.EXECUTE.name()))) {
+                returnInfo = rInfo;
+                transition = ReturnInfoTransition.EXECUTE;
+                break;
+            }
+        }
+
+        ReturnStrategy function;
+        if (transition.equals(ReturnInfoTransition.ATTEMPT)) {
+            function = new AttemptReturnStrategy(configReader, signifydClient, signifydMapper);
+        } else if (transition.equals(ReturnInfoTransition.EXECUTE)) {
+            function = new ExecuteReturnStrategy(configReader, signifydClient, signifydMapper);
         } else {
-            function = new AttemptReturnFunction(configReader, signifydClient, signifydMapper);
+            return generateErrorResponse(order.getCountry(),
+                    String.format("Received transition type (%s) is not supported", transition.name()));
         }
 
         try {
@@ -73,6 +93,9 @@ public class ReturnFunction
             throw new RuntimeException(e);
         } catch (NullPointerException e) {
             return generateErrorResponse(order.getCountry(), e.getMessage());
+        } catch (NoSuchElementException e) {
+            return generateErrorResponse(order.getCountry(),
+                    String.format("No such return info with (%s)", transition.name()));
         }
     }
 

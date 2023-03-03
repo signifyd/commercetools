@@ -7,6 +7,7 @@ import com.commercetools.api.models.type.FieldContainer;
 import com.commercetools.api.models.type.TypeResourceIdentifier;
 import com.commercetools.api.models.type.TypeResourceIdentifierBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.signifyd.ctconnector.function.adapter.commercetools.enums.ReturnInfoTransition;
 import com.signifyd.ctconnector.function.adapter.signifyd.SignifydClient;
 import com.signifyd.ctconnector.function.adapter.signifyd.exception.Signifyd4xxException;
 import com.signifyd.ctconnector.function.adapter.signifyd.exception.Signifyd5xxException;
@@ -24,14 +25,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AttemptReturnFunction implements ReturnFunctionStrategy {
+public class AttemptReturnStrategy implements ReturnStrategy {
 
     protected final ConfigReader configReader;
     protected final SignifydClient signifydClient;
     protected final SignifydMapper signifydMapper;
     protected final Logger logger = (Logger) LoggerFactory.getLogger(getClass().getName());
 
-    public AttemptReturnFunction(
+    public AttemptReturnStrategy(
             ConfigReader configReader,
             SignifydClient signifydClient,
             SignifydMapper signifydMapper) {
@@ -76,6 +77,7 @@ public class AttemptReturnFunction implements ReturnFunctionStrategy {
             FieldContainer fields = FieldContainer.builder()
                     .addValue(CustomFields.RETURN_ITEM_RAW_ATTEMPT_RESPONSE,
                             objMapper.writeValueAsString(attemptReturnResponse))
+                    .addValue(CustomFields.RETURN_ITEM_TRANSITION, ReturnInfoTransition.EXECUTE.name())
                     .build();
             response.addAction(
                     OrderSetReturnItemCustomTypeAction.builder()

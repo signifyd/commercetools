@@ -2,7 +2,6 @@ package com.signifyd.ctconnector.function.utils;
 
 import com.commercetools.api.models.customer.Customer;
 import com.commercetools.api.models.order.Order;
-import com.commercetools.api.models.order.ReturnInfo;
 import com.signifyd.ctconnector.function.config.model.phoneNumber.PhoneNumberField;
 import com.signifyd.ctconnector.function.constants.CustomFields;
 
@@ -11,7 +10,8 @@ public class OrderHelper {
     private static boolean isOrderSentToSignifyd(Order order) {
         return order.getCustom() != null
                 && order.getCustom().getFields().values().get(CustomFields.IS_SENT_TO_SIGNIFYD) != null
-                &&  order.getCustom().getFields().values().get(CustomFields.IS_SENT_TO_SIGNIFYD).toString().equals("true");
+                && order.getCustom().getFields().values().get(CustomFields.IS_SENT_TO_SIGNIFYD).toString()
+                        .equals("true");
     }
 
     public static void controlOrderSentToSignifyd(Order order) throws RuntimeException {
@@ -54,14 +54,6 @@ public class OrderHelper {
         if (order.getPaymentInfo() != null && !order.getPaymentInfo().getPayments().isEmpty()) {
             var count = order.getPaymentInfo().getPayments().size();
             return order.getPaymentInfo().getPayments().get(count - 1).getId();
-        }
-        return null;
-    }
-
-    public static ReturnInfo getMostRecentReturnInfoFromOrder(Order order) {
-        if (order.getReturnInfo() != null && !order.getReturnInfo().isEmpty()) {
-            int count = order.getReturnInfo().size();
-            return order.getReturnInfo().get(count - 1);
         }
         return null;
     }

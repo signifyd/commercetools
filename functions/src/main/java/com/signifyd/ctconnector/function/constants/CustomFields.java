@@ -36,6 +36,7 @@ public final class CustomFields {
 
     // Order Return Item Custom Fields
     public final static String RETURN_ITEM_RAW_ATTEMPT_RESPONSE = "rawAttemptResponse";
+    public final static String RETURN_ITEM_TRANSITION = "transition";
 
     // API Extension
     public final static String INVALID_INPUT = "InvalidInput";

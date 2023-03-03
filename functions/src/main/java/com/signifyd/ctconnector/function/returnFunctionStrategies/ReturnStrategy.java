@@ -9,6 +9,6 @@ import com.signifyd.ctconnector.function.adapter.signifyd.exception.Signifyd4xxE
 import com.signifyd.ctconnector.function.adapter.signifyd.exception.Signifyd5xxException;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.ExtensionResponse;
 
-public interface ReturnFunctionStrategy {
+public interface ReturnStrategy {
     public ExtensionResponse<OrderUpdateAction> execute(Order order, ReturnInfo returnInfo) throws Signifyd4xxException, Signifyd5xxException, IOException;
 }
