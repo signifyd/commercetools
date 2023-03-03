@@ -15,5 +15,4 @@ public class ProxyResource {
     public String customerId;
     @JsonProperty("returnInfo")
     public ReturnInfo returnInfo;
-
 }
