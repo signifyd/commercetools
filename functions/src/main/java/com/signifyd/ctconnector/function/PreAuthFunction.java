@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Logger;
 
 import com.commercetools.api.models.common.Money;
 import com.commercetools.api.models.customer.Customer;
+import com.commercetools.api.models.error.InvalidInputError;
 import com.commercetools.api.models.order.*;
 import com.commercetools.api.models.payment.Payment;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -11,7 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.signifyd.ctconnector.function.adapter.commercetools.CommercetoolsClient;
 import com.signifyd.ctconnector.function.adapter.signifyd.SignifydClient;
 import com.signifyd.ctconnector.function.adapter.signifyd.enums.CoverageRequests;
-import com.signifyd.ctconnector.function.adapter.signifyd.enums.ErrorCodes4XX;
 import com.signifyd.ctconnector.function.adapter.signifyd.exception.Signifyd4xxException;
 import com.signifyd.ctconnector.function.adapter.signifyd.exception.Signifyd5xxException;
 import com.signifyd.ctconnector.function.adapter.signifyd.mapper.SignifydMapper;
@@ -82,9 +82,7 @@ public class PreAuthFunction
         Payment payment = this.commercetoolsClient.getPaymentById(OrderHelper.getMostRecentPaymentIdFromOrder(order));
 
         if (!isOrderReadyForCheckoutApiCall(order)) {
-            ExtensionResponse<OrderUpdateAction> response = new ExtensionResponse<>();
-            response.setActions(new ArrayList<>());
-            return response;
+            return new ExtensionResponse<OrderUpdateAction>(new ArrayList<>());
         }
 
         if (payment != null && !isOrderEligibleToProcess(payment)) {
@@ -195,11 +193,8 @@ public class PreAuthFunction
                         && configReader.getDecisionActions(order.getCountry()).getReject().getActionType()
                                 .equals(ActionType.DO_NOT_CREATE_ORDER)) {
                     ExtensionResponse<OrderUpdateAction> response = new ExtensionResponse<>();
-                    response.setStatusCode(ErrorCodes4XX.BAD_REQUEST.getValue());
-                    response.setResponseType(CustomFields.FAILED_VALIDATION);
-                    response.setMessage("FRAUD_REJECTION: Order is not generated. Fraud detection found problems.");
                     response.addError(ExtensionError.builder()
-                            .code(CustomFields.INVALID_INPUT)
+                            .code(InvalidInputError.INVALID_INPUT)
                             .message("FRAUD_REJECTION: Order is not generated. Fraud detection found problems.")
                             .build());
                     return response;

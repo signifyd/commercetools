@@ -50,8 +50,9 @@ public class PreAuthHandler implements RequestHandler<Map<String, Object>, Exten
             }
             ExtensionResponse<OrderUpdateAction> result = function.apply(request);
             if (result.isErrorResponse()) {
+                result.setResponseType(result.FAILED_VALIDATION);
                 response.setStatusCode(HttpStatusCode.BAD_REQUEST_400);
-                logger.info("PreAuth prevented returning with 400 code:" + result.getMessage());
+                logger.info("PreAuth prevented returning with 400 code:" + objectMapper.writeValueAsString(result.getErrors()));
             }
             String rawBody = objectMapper.writeValueAsString(result);
             response.setBody(rawBody);

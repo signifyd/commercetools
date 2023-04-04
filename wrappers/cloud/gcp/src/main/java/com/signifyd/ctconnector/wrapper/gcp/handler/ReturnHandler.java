@@ -45,7 +45,7 @@ public class ReturnHandler implements HttpFunction {
             ExtensionResponse<OrderUpdateAction> result = function.apply(request);
             if (result.isErrorResponse()) {
                 httpResponse.setStatusCode(HttpStatusCode.BAD_REQUEST_400);
-                logger.info("Return prevented returning with 400 code:" + result.getMessage());
+                logger.info("Return prevented returning with 400 code:" + objectMapper.writeValueAsString(result.getErrors()));
             }
             String rawBody = objectMapper.writeValueAsString(result);
             PrintWriter writer = new PrintWriter(httpResponse.getWriter());
