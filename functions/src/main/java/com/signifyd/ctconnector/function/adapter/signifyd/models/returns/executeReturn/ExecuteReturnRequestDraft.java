@@ -2,6 +2,7 @@ package com.signifyd.ctconnector.function.adapter.signifyd.models.returns.execut
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.signifyd.ctconnector.function.adapter.signifyd.enums.ReturnStatus;
 
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,8 @@ public class ExecuteReturnRequestDraft implements Serializable {
   private String orderId;
   @JsonProperty("returnId")
   private String returnId;
+  @JsonProperty("returnStatus")
+  private ReturnStatus returnStatus;
   @JsonProperty("trackingNumbers")
   private List<String> trackingNumbers;
   @JsonProperty("refundTransactionId")
