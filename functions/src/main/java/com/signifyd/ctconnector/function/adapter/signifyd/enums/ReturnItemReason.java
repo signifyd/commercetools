@@ -13,5 +13,6 @@ public enum ReturnItemReason {
     SIGNIFICANTLY_NOT_AS_DESCRIBED,
     ORDER_ERROR,
     CANCELLED_BY_ISSUER,
+    LOST,
     OTHER
 }

@@ -44,7 +44,7 @@ public class AttemptReturnStrategy implements ReturnStrategy {
     @Override
     public ExtensionResponse<OrderUpdateAction> execute(Order order, ReturnInfo returnInfo) throws IOException, Signifyd4xxException, Signifyd5xxException {
         if (!isReturnTrackingIdValid(order.getReturnInfo(), returnInfo.getReturnTrackingId())) {
-            throw new NullPointerException("Attempt Return API Fail: Return tracking id should be unique and not empty.");
+            throw new NullPointerException("Return tracking id should be unique and not empty.");
         }
 
         AttemptReturnRequestDraft requestDraft = generateRequest(order, returnInfo);

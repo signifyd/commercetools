@@ -13,4 +13,6 @@ public class ExtensionError {
     private String message;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private LocalizedString localizedMessage;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String extensionExtraInfo;
 }
