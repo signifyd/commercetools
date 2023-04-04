@@ -1,9 +1,9 @@
 package com.signifyd.ctconnector.function;
 
 import ch.qos.logback.classic.Logger;
-import io.vrap.rmf.base.client.http.HttpStatusCode;
 
 import com.commercetools.api.models.common.LocalizedString;
+import com.commercetools.api.models.error.InvalidOperationError;
 import com.commercetools.api.models.order.*;
 import com.signifyd.ctconnector.function.adapter.commercetools.enums.ReturnInfoTransition;
 import com.signifyd.ctconnector.function.adapter.signifyd.SignifydClient;
@@ -100,13 +100,12 @@ public class ReturnFunction
     }
 
     private ExtensionResponse<OrderUpdateAction> generateErrorResponse(String country, String message) {
-        logger.info(message);
+        logger.info(String.format("Return Function Error: %s", message));
         ExtensionResponse<OrderUpdateAction> response = new ExtensionResponse<>();
         LocalizedString localizedMessage = LocalizedString.builder().addValue(country, message).build();
-        response.setStatusCode(HttpStatusCode.BAD_REQUEST_400);
         response.addError(
                 ExtensionError.builder()
-                        .code(CustomFields.INVALID_INPUT)
+                        .code(InvalidOperationError.INVALID_OPERATION)
                         .message(message)
                         .localizedMessage(localizedMessage)
                         .build());

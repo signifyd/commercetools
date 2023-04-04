@@ -63,7 +63,7 @@ public class PreAuthHandler {
             ExtensionResponse<OrderUpdateAction> result = function.apply(request);
             if (result.isErrorResponse()) {
                 responseBuilder.status(HttpStatusType.custom(HttpStatusCode.BAD_REQUEST_400));
-                logger.info("PreAuth prevented returning with 400 code:" + result.getMessage());
+                logger.info("PreAuth prevented returning with 400 code:" + objectMapper.writeValueAsString(result.getErrors()));
             }
             String rawBody = objectMapper.writeValueAsString(result);
             logger.debug("Sending response: {}", rawBody);

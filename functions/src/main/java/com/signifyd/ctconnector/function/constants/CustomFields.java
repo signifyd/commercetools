@@ -38,10 +38,6 @@ public final class CustomFields {
     public final static String RETURN_ITEM_RAW_ATTEMPT_RESPONSE = "rawAttemptResponse";
     public final static String RETURN_ITEM_TRANSITION = "transition";
 
-    // API Extension
-    public final static String INVALID_INPUT = "InvalidInput";
-    public final static String FAILED_VALIDATION = "FailedValidation";
-
     // Order Custom Type
     public final static String SIGNIFYD_ORDER_TYPE_KEY = "signifyd-order-type";
     public final static String SIGNIFYD_RETURN_ITEM_TYPE = "signifyd-return-item-type";
