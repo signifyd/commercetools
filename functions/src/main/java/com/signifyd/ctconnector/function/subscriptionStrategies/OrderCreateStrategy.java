@@ -19,8 +19,11 @@ public class OrderCreateStrategy implements SubscriptionStrategy {
     private final SignifydClient signifydClient;
     private final ConfigReader configReader;
 
-    public OrderCreateStrategy(CommercetoolsClient commercetoolsClient, SignifydClient signifydClient,
-            ConfigReader configReader) {
+    public OrderCreateStrategy(
+        CommercetoolsClient commercetoolsClient,
+        SignifydClient signifydClient,
+        ConfigReader configReader
+    ) {
         this.commercetoolsClient = commercetoolsClient;
         this.signifydClient = signifydClient;
         this.configReader = configReader;

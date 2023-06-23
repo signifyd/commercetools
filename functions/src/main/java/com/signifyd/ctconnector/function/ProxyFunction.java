@@ -6,6 +6,7 @@ import com.signifyd.ctconnector.function.adapter.commercetools.models.proxy.Prox
 import com.signifyd.ctconnector.function.adapter.commercetools.models.proxy.ProxyResponse;
 import com.signifyd.ctconnector.function.config.ConfigReader;
 import com.signifyd.ctconnector.function.proxyStrategies.*;
+import com.signifyd.ctconnector.function.utils.ProxyHelper;
 
 import io.vrap.rmf.base.client.http.HttpStatusCode;
 import java.util.function.Function;
@@ -31,6 +32,12 @@ public class ProxyFunction implements Function<ProxyRequest<ProxyResource>, Prox
 
     @Override
     public ProxyResponse apply(ProxyRequest<ProxyResource> request) {
+        try {
+            ProxyHelper.validateRequest(request);
+        } catch (RuntimeException e) {
+            return ProxyHelper.generateResponse(HttpStatusCode.BAD_REQUEST_400, false, e.getMessage());
+        }
+
         ProxyStrategy proxyStrategy;
         switch (request.getAction()) {
             case ADD_RETURN_INFO: {
