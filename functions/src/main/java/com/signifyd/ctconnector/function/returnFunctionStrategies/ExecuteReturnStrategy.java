@@ -12,7 +12,6 @@ import com.signifyd.ctconnector.function.adapter.signifyd.exception.Signifyd5xxE
 import com.signifyd.ctconnector.function.adapter.signifyd.mapper.SignifydMapper;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.ExtensionResponse;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.executeReturn.ExecuteReturnRequestDraft;
-import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.executeReturn.ExecuteReturnResponse;
 import com.signifyd.ctconnector.function.config.ConfigReader;
 import com.signifyd.ctconnector.function.constants.CustomFields;
 
@@ -28,9 +27,10 @@ public class ExecuteReturnStrategy implements ReturnStrategy {
     protected final Logger logger = (Logger) LoggerFactory.getLogger(getClass().getName());
 
     public ExecuteReturnStrategy(
-            ConfigReader configReader,
-            SignifydClient signifydClient,
-            SignifydMapper signifydMapper) {
+        ConfigReader configReader,
+        SignifydClient signifydClient,
+        SignifydMapper signifydMapper
+    ) {
         this.configReader = configReader;
         this.signifydClient = signifydClient;
         this.signifydMapper = signifydMapper;
@@ -39,9 +39,9 @@ public class ExecuteReturnStrategy implements ReturnStrategy {
     @Override
     public ExtensionResponse<OrderUpdateAction> execute(Order order, ReturnInfo returnInfo) throws Signifyd4xxException, Signifyd5xxException, IOException {
         ExecuteReturnRequestDraft requestDraft = generateRequest(order, returnInfo);
-        ExecuteReturnResponse executeReturnResponse = signifydClient.executeReturn(requestDraft);
+        signifydClient.executeReturn(requestDraft);
         logger.info("Execute Return API Success: Order successfully sent to Signifyd");
-        return generateResponse(order, returnInfo, executeReturnResponse);
+        return generateResponse(order, returnInfo);
     }
 
     private ExecuteReturnRequestDraft generateRequest(Order order, ReturnInfo returnInfo) {
@@ -53,9 +53,9 @@ public class ExecuteReturnStrategy implements ReturnStrategy {
     }
 
     private ExtensionResponse<OrderUpdateAction> generateResponse(
-            Order order,
-            ReturnInfo returnInfo,
-            ExecuteReturnResponse executeReturnResponse) throws IOException {
+        Order order,
+        ReturnInfo returnInfo
+    ) throws IOException {
         ExtensionResponse<OrderUpdateAction> response = new ExtensionResponse<OrderUpdateAction>();
         TypeResourceIdentifier type = TypeResourceIdentifierBuilder.of().key(CustomFields.SIGNIFYD_RETURN_ITEM_TYPE).build();
         for (ReturnItem returnItem : returnInfo.getItems()) {

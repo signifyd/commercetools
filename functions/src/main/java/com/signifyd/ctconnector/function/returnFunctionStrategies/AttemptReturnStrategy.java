@@ -33,9 +33,10 @@ public class AttemptReturnStrategy implements ReturnStrategy {
     protected final Logger logger = (Logger) LoggerFactory.getLogger(getClass().getName());
 
     public AttemptReturnStrategy(
-            ConfigReader configReader,
-            SignifydClient signifydClient,
-            SignifydMapper signifydMapper) {
+        ConfigReader configReader,
+        SignifydClient signifydClient,
+        SignifydMapper signifydMapper
+    ) {
         this.configReader = configReader;
         this.signifydClient = signifydClient;
         this.signifydMapper = signifydMapper;
@@ -64,9 +65,9 @@ public class AttemptReturnStrategy implements ReturnStrategy {
     }
 
     private ExtensionResponse<OrderUpdateAction> generateResponse(
-            Order order,
-            ReturnInfo returnInfo,
-            AttemptReturnResponse attemptReturnResponse
+        Order order,
+        ReturnInfo returnInfo,
+        AttemptReturnResponse attemptReturnResponse
     ) throws IOException {
         ObjectMapper objMapper = new ObjectMapper();
         ExtensionResponse<OrderUpdateAction> response = new ExtensionResponse<OrderUpdateAction>();

@@ -17,15 +17,13 @@ public class PaymentTransactionStateChangedStrategy implements SubscriptionStrat
     private final ConfigReader configReader;
 
     public PaymentTransactionStateChangedStrategy(
-            CommercetoolsClient commercetoolsClient,
-            SignifydClient signifydClient,
-            ConfigReader configReader
+        CommercetoolsClient commercetoolsClient,
+        SignifydClient signifydClient,
+        ConfigReader configReader
     ) {
         this.commercetoolsClient = commercetoolsClient;
         this.signifydClient = signifydClient;
         this.configReader = configReader;
-
-
     }
 
     @Override
