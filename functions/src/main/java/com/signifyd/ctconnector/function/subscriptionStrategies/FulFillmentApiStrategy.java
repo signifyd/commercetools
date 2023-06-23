@@ -30,9 +30,9 @@ public class FulFillmentApiStrategy implements SubscriptionStrategy {
     private final Logger logger = (Logger) LoggerFactory.getLogger(getClass().getName());
 
     public FulFillmentApiStrategy(
-            CommercetoolsClient commercetoolsClient,
-            SignifydClient signifydClient,
-            ConfigReader configReader
+        CommercetoolsClient commercetoolsClient,
+        SignifydClient signifydClient,
+        ConfigReader configReader
     ) {
         this.commercetoolsClient = commercetoolsClient;
         this.signifydClient = signifydClient;

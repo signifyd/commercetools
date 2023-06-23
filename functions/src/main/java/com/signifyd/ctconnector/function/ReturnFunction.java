@@ -12,7 +12,6 @@ import com.signifyd.ctconnector.function.adapter.signifyd.exception.Signifyd5xxE
 import com.signifyd.ctconnector.function.adapter.signifyd.mapper.SignifydMapper;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.ExtensionResponse;
 import com.signifyd.ctconnector.function.config.ConfigReader;
-import com.signifyd.ctconnector.function.config.PropertyReader;
 import com.signifyd.ctconnector.function.constants.CustomFields;
 import com.signifyd.ctconnector.function.returnFunctionStrategies.AttemptReturnStrategy;
 import com.signifyd.ctconnector.function.returnFunctionStrategies.ExecuteReturnStrategy;
@@ -23,7 +22,6 @@ import com.signifyd.ctconnector.function.utils.OrderHelper;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 public class ReturnFunction
@@ -40,10 +38,11 @@ public class ReturnFunction
         this.signifydMapper = new SignifydMapper();
     }
 
-    public ReturnFunction(ConfigReader configReader,
-            SignifydClient signifydClient,
-            PropertyReader propertyReader,
-            SignifydMapper signifydMapper) {
+    public ReturnFunction(
+        ConfigReader configReader,
+        SignifydClient signifydClient,
+        SignifydMapper signifydMapper
+    ) {
         this.configReader = configReader;
         this.signifydClient = signifydClient;
         this.signifydMapper = signifydMapper;
@@ -65,7 +64,6 @@ public class ReturnFunction
             if (rInfo.getItems().stream().anyMatch(
                     rItem -> rItem.getCustom() == null)) {
                 returnInfo = rInfo;
-                transition = ReturnInfoTransition.ATTEMPT;
                 break;
             } else if (rInfo.getItems().stream().anyMatch(
                     rItem -> rItem.getShipmentState().equals(ReturnShipmentState.BACK_IN_STOCK)
@@ -80,11 +78,8 @@ public class ReturnFunction
         ReturnStrategy function;
         if (transition.equals(ReturnInfoTransition.ATTEMPT)) {
             function = new AttemptReturnStrategy(configReader, signifydClient, signifydMapper);
-        } else if (transition.equals(ReturnInfoTransition.EXECUTE)) {
-            function = new ExecuteReturnStrategy(configReader, signifydClient, signifydMapper);
         } else {
-            return generateErrorResponse(order.getCountry(),
-                    String.format("Received transition type (%s) is not supported", transition.name()));
+            function = new ExecuteReturnStrategy(configReader, signifydClient, signifydMapper);
         }
 
         try {
@@ -93,9 +88,6 @@ public class ReturnFunction
             throw new RuntimeException(e);
         } catch (NullPointerException e) {
             return generateErrorResponse(order.getCountry(), e.getMessage());
-        } catch (NoSuchElementException e) {
-            return generateErrorResponse(order.getCountry(),
-                    String.format("No such return info with (%s)", transition.name()));
         }
     }
 

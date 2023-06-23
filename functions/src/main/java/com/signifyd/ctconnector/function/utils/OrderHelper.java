@@ -8,9 +8,10 @@ import com.signifyd.ctconnector.function.constants.CustomFields;
 public class OrderHelper {
 
     private static boolean isOrderSentToSignifyd(Order order) {
-        return order.getCustom() != null
-                && order.getCustom().getFields().values().get(CustomFields.IS_SENT_TO_SIGNIFYD) != null
-                && order.getCustom().getFields().values().get(CustomFields.IS_SENT_TO_SIGNIFYD).toString()
+        return order.getCustom() != null &&
+                order.getCustom().getFields().values()
+                        .getOrDefault(CustomFields.IS_SENT_TO_SIGNIFYD, false)
+                        .toString()
                         .equals("true");
     }
 

@@ -73,7 +73,7 @@ public class Application {
 
         this.preAuthFunction = new PreAuthFunction(configReader, commercetoolsClient, signifydClient, propertyReader, signifydMapper);
         this.proxyFunction = new ProxyFunction(commercetoolsClient);
-        this.returnFunction = new ReturnFunction(configReader, signifydClient, propertyReader, signifydMapper);
+        this.returnFunction = new ReturnFunction(configReader, signifydClient, signifydMapper);
         this.subscriptionFunction = new SubscriptionFunction(configReader, commercetoolsClient, signifydClient);
         this.webhookFunction = new WebhookFunction(configReader, commercetoolsClient);
     }

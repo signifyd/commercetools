@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -63,11 +64,13 @@ public class PreAuthFunction
         this.signifydMapper = new SignifydMapper();
     }
 
-    public PreAuthFunction(ConfigReader configReader,
-            CommercetoolsClient commercetoolsClient,
-            SignifydClient signifydClient,
-            PropertyReader propertyReader,
-            SignifydMapper signifydMapper) {
+    public PreAuthFunction(
+        ConfigReader configReader,
+        CommercetoolsClient commercetoolsClient,
+        SignifydClient signifydClient,
+        PropertyReader propertyReader,
+        SignifydMapper signifydMapper
+    ) {
         this.configReader = configReader;
         this.commercetoolsClient = commercetoolsClient;
         this.signifydClient = signifydClient;
@@ -78,20 +81,19 @@ public class PreAuthFunction
     @Override
     public ExtensionResponse<OrderUpdateAction> apply(ExtensionRequest<OrderReference> request) {
         validateExtensionRequest(request);
-        Order order = request.getResource().getObj();
-        Payment payment = this.commercetoolsClient.getPaymentById(OrderHelper.getMostRecentPaymentIdFromOrder(order));
 
+        Order order = request.getResource().getObj();
         if (!isOrderReadyForCheckoutApiCall(order)) {
             return new ExtensionResponse<OrderUpdateAction>(new ArrayList<>());
         }
 
-        if (payment != null && !isOrderEligibleToProcess(payment)) {
-            ExtensionResponse<OrderUpdateAction> response = new ExtensionResponse<>();
-            response.addAction(OrderSetCustomFieldActionBuilder.of()
-                    .name(CustomFields.IS_SENT_TO_SIGNIFYD)
-                    .value(false)
-                    .build());
-            return response;
+        Payment payment = this.commercetoolsClient.getPaymentById(OrderHelper.getMostRecentPaymentIdFromOrder(order));
+        if (!isOrderEligibleToProcess(payment)) {
+            return new ExtensionResponse<OrderUpdateAction>(
+                    List.of(OrderSetCustomFieldActionBuilder.of()
+                            .name(CustomFields.IS_SENT_TO_SIGNIFYD)
+                            .value(false)
+                            .build()));
         }
 
         order.getCustom().getFields().values().put(CustomFields.CHECKOUT_ID, UUID.randomUUID().toString());
@@ -139,14 +141,19 @@ public class PreAuthFunction
         return draftBuilder.build();
     }
 
-    private ExtensionResponse<OrderUpdateAction> sendRequest(Order order, Payment payment, Customer customer) {
-        ObjectMapper objMapper = new ObjectMapper();
+    private ExtensionResponse<OrderUpdateAction> sendRequest(
+        Order order,
+        Payment payment,
+        Customer customer
+    ) {
         try {
-            DecisionResponse checkoutResponse = this.signifydClient
-                    .checkouts(generateRequest(order, payment, customer));
+            CheckoutRequestDraft checkoutRequestDraft = generateRequest(order, payment, customer);
+            DecisionResponse checkoutResponse = this.signifydClient.checkouts(checkoutRequestDraft);
+            ExtensionResponse<OrderUpdateAction> extensionResponse = generateResponse(checkoutResponse, order);
             logger.info("PreAuth API Success: Order successfully sent to Signifyd");
-            return generateResponse(checkoutResponse, order);
+            return extensionResponse;
         } catch (Signifyd4xxException e) {
+            ObjectMapper objMapper = new ObjectMapper();
             SignifydError signifydError = new SignifydError();
             signifydError.setErrors(e.getResponse().getErrors());
             signifydError.setTraceId(e.getResponse().getTraceId());
@@ -181,8 +188,9 @@ public class PreAuthFunction
     }
 
     private ExtensionResponse<OrderUpdateAction> generateResponse(
-            DecisionResponse decisionResponse,
-            Order order) throws IOException {
+        DecisionResponse decisionResponse,
+        Order order
+    ) throws IOException {
         DecisionCommand command = null;
         switch (decisionResponse.getDecision().checkpointAction) {
             case ACCEPT:
@@ -232,7 +240,7 @@ public class PreAuthFunction
     }
 
     private boolean isOrderEligibleToProcess(Payment payment) {
-        return this.configReader.getExcludedPaymentMethods().stream()
+        return payment != null && this.configReader.getExcludedPaymentMethods().stream()
                 .noneMatch(p -> p.equals(payment.getPaymentMethodInfo().getMethod()));
     }
 
