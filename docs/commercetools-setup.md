@@ -152,6 +152,8 @@ Required fields and what they represented are listed below
 | isSentToSignifyd            | Boolean |        |                                                                                        |
 | signifydOrderUrl            | String  |        |                                                                                        |
 | signifydError               | String  |        |                                                                                        |
+| signifydReturnsRawDecision               | String  |        |                                                                                        |
+| signifydReturnsCheckpointAction               | String  |        |                                                                                        |
 
 The above fields needs to be added to existed custom-type of order or needs to be created with new type.
 
@@ -167,6 +169,17 @@ The above fields needs to be added to existed custom-type of order or needs to b
 | cardExpiryYear  | Number |        |
 
 The above fields needs to be added to existed custom-type of payment or needs to be created with new type.
+
+//todo place scripts here
+
+**​Order Return Item Fields** 
+
+| Name                  | Type   | Reason |
+| ---------------       | ------ | ------ |
+| rawAttemptResponse    | String |        |
+| transition            | String |        |
+
+The above fields needs to be added to existed custom-type of return item or needs to be created with new type.
 
 //todo place scripts here
 
