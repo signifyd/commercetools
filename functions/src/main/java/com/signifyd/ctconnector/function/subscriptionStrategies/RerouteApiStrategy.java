@@ -37,7 +37,7 @@ public class RerouteApiStrategy implements SubscriptionStrategy {
         OrderHelper.controlOrderSentToSignifyd(order);
         var draft = RerouteRequestDraft
                 .builder()
-                .orderId(order.getId())
+                .orderId(order.getOrderNumber() != null ? order.getOrderNumber() : order.getId())
                 .shipments(mapShipmentsFromCommercetools(order))
                 .build();
 

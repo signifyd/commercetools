@@ -57,7 +57,7 @@ public class AttemptReturnStrategy implements ReturnStrategy {
     private AttemptReturnRequestDraft generateRequest(Order order, ReturnInfo returnInfo) {
         return AttemptReturnRequestDraft
                 .builder()
-                .orderId(order.getId())
+                .orderId(order.getOrderNumber() != null ? order.getOrderNumber() : order.getId())
                 .returnId(returnInfo.getReturnTrackingId())
                 .returnedItems(signifydMapper.mapReturnedProductsFromCommercetools(order.getLineItems(), returnInfo))
                 .device(signifydMapper.mapDeviceFromCommercetools(order))

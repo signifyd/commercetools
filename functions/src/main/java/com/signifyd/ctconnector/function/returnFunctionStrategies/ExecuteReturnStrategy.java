@@ -47,7 +47,7 @@ public class ExecuteReturnStrategy implements ReturnStrategy {
     private ExecuteReturnRequestDraft generateRequest(Order order, ReturnInfo returnInfo) {
         return ExecuteReturnRequestDraft
                 .builder()
-                .orderId(order.getId())
+                .orderId(order.getOrderNumber() != null ? order.getOrderNumber() : order.getId())
                 .returnId(returnInfo.getReturnTrackingId())
                 .build();
     }

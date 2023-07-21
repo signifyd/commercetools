@@ -55,7 +55,7 @@ public class FulFillmentApiStrategy implements SubscriptionStrategy {
 
         FulfillmentRequestDraft draft = FulfillmentRequestDraft
                 .builder()
-                .orderId(order.getId())
+                .orderId(order.getOrderNumber() != null ? order.getOrderNumber() : order.getId())
                 .fulfillments(fulfillments)
                 .build();
 
