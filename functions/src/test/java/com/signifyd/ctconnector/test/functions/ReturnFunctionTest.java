@@ -18,7 +18,6 @@ import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.checkou
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.checkoutResponse.Decision;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.attemptReturn.AttemptReturnResponse;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.executeReturn.ExecuteReturnResponse;
-import com.signifyd.ctconnector.function.config.ConfigReader;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.ExtensionRequest;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,8 +45,6 @@ public class ReturnFunctionTest {
     private ReturnFunction returnFunction;
 
     @Mock
-    private ConfigReader configReader;
-    @Mock
     private CommercetoolsClient commercetoolsClient;
 
     @Mock
@@ -60,10 +57,7 @@ public class ReturnFunctionTest {
     public void setup(){
         System.setOut(new PrintStream(outContent));
 
-        returnFunction = new ReturnFunction(
-                configReader,
-                signifydClient,
-                signifydMapper);
+        returnFunction = new ReturnFunction(signifydClient, signifydMapper);
     }
 
     @Test

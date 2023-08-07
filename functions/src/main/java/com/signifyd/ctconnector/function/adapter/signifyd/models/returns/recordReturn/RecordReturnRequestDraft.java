@@ -1,4 +1,4 @@
-package com.signifyd.ctconnector.function.adapter.signifyd.models.returns.attemptReturn;
+package com.signifyd.ctconnector.function.adapter.signifyd.models.returns.recordReturn;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,7 +17,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder
 @Data
-public class AttemptReturnRequestDraft implements Serializable {
+public class RecordReturnRequestDraft implements Serializable {
   @JsonProperty("orderId")
   @JsonInclude(JsonInclude.Include.ALWAYS)
   private String orderId;
@@ -34,4 +34,12 @@ public class AttemptReturnRequestDraft implements Serializable {
   private Refund refund;
   @JsonProperty("initiator")
   private Initiator initiator;
+  @JsonProperty("trackingNumbers")
+  private List<String> trackingNumbers;
+  @JsonProperty("refundTransactionId")
+  private String refundTransactionId;
+  @JsonProperty("storeCreditId")
+  private String storeCreditId;
+  @JsonProperty("replacementOrderId")
+  private String replacementOrderId;
 }
