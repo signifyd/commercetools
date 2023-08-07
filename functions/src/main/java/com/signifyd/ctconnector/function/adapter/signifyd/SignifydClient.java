@@ -23,6 +23,8 @@ import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.attempt
 import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.attemptReturn.AttemptReturnResponse;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.executeReturn.ExecuteReturnRequestDraft;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.executeReturn.ExecuteReturnResponse;
+import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.recordReturn.RecordReturnRequestDraft;
+import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.recordReturn.RecordReturnResponse;
 import com.signifyd.ctconnector.function.config.ConfigReader;
 import com.signifyd.ctconnector.function.constants.SignifydApi;
 import okhttp3.*;
@@ -77,6 +79,9 @@ public class SignifydClient {
         return this.execute(draft, ExecuteReturnResponse.class, SignifydApi.EXECUTE_RETURN, "v3/orders/events/returns/executions");
     }
 
+    public RecordReturnResponse recordReturn(RecordReturnRequestDraft draft) throws Signifyd4xxException, Signifyd5xxException {
+        return this.execute(draft, RecordReturnResponse.class, SignifydApi.RECORD_RETURN, "v3/orders/events/returns/records");
+    }
 
     private <B, T> T execute(B body, Class<T> clazz, String apiName, String path) throws Signifyd4xxException, Signifyd5xxException {
 

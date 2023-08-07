@@ -15,8 +15,10 @@ import java.util.List;
 @Data
 public class ExecuteReturnRequestDraft implements Serializable {
   @JsonProperty("orderId")
+  @JsonInclude(JsonInclude.Include.ALWAYS)
   private String orderId;
   @JsonProperty("returnId")
+  @JsonInclude(JsonInclude.Include.ALWAYS)
   private String returnId;
   @JsonProperty("returnStatus")
   private ReturnStatus returnStatus;

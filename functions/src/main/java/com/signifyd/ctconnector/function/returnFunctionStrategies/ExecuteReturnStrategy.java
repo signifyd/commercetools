@@ -9,10 +9,8 @@ import com.signifyd.ctconnector.function.adapter.commercetools.enums.ReturnInfoT
 import com.signifyd.ctconnector.function.adapter.signifyd.SignifydClient;
 import com.signifyd.ctconnector.function.adapter.signifyd.exception.Signifyd4xxException;
 import com.signifyd.ctconnector.function.adapter.signifyd.exception.Signifyd5xxException;
-import com.signifyd.ctconnector.function.adapter.signifyd.mapper.SignifydMapper;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.ExtensionResponse;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.executeReturn.ExecuteReturnRequestDraft;
-import com.signifyd.ctconnector.function.config.ConfigReader;
 import com.signifyd.ctconnector.function.constants.CustomFields;
 
 import org.slf4j.LoggerFactory;
@@ -21,19 +19,13 @@ import java.io.IOException;
 
 public class ExecuteReturnStrategy implements ReturnStrategy {
 
-    protected final ConfigReader configReader;
     protected final SignifydClient signifydClient;
-    protected final SignifydMapper signifydMapper;
     protected final Logger logger = (Logger) LoggerFactory.getLogger(getClass().getName());
 
     public ExecuteReturnStrategy(
-        ConfigReader configReader,
-        SignifydClient signifydClient,
-        SignifydMapper signifydMapper
+        SignifydClient signifydClient
     ) {
-        this.configReader = configReader;
         this.signifydClient = signifydClient;
-        this.signifydMapper = signifydMapper;
     }
 
     @Override
@@ -59,7 +51,7 @@ public class ExecuteReturnStrategy implements ReturnStrategy {
         ExtensionResponse<OrderUpdateAction> response = new ExtensionResponse<OrderUpdateAction>();
         TypeResourceIdentifier type = TypeResourceIdentifierBuilder.of().key(CustomFields.SIGNIFYD_RETURN_ITEM_TYPE).build();
         for (ReturnItem returnItem : returnInfo.getItems()) {
-            returnItem.getCustom().getFields().values().put(CustomFields.RETURN_ITEM_TRANSITION, ReturnInfoTransition.RECORD.name());
+            returnItem.getCustom().getFields().values().put(CustomFields.RETURN_ITEM_TRANSITION, ReturnInfoTransition.EXECUTE.name());
             response.addAction(
                     OrderSetReturnItemCustomTypeAction.builder()
                             .type(type)

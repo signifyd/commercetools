@@ -80,6 +80,13 @@ public class SubscriptionFunction implements Function<Message, String> {
                 );
                 break;
             }
+            case OrderStateChangedMessage.ORDER_STATE_CHANGED: {
+                subscriptionStrategy = new RecordReturnApiStrategy(
+                        this.commercetoolsClient,
+                        this.signifydClient
+                );
+                break;
+            } 
             default:
                 throw new NotImplementedException(String.format("Received message type (%s) is not supported", message.getType()));
         }

@@ -22,28 +22,25 @@ import com.signifyd.ctconnector.function.utils.OrderHelper;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.function.Function;
 
 public class ReturnFunction
         implements Function<ExtensionRequest<OrderReference>, ExtensionResponse<OrderUpdateAction>> {
 
-    protected final ConfigReader configReader;
     protected final SignifydClient signifydClient;
     protected final SignifydMapper signifydMapper;
     protected final Logger logger = (Logger) LoggerFactory.getLogger(getClass().getName());
 
     public ReturnFunction() {
-        this.configReader = new ConfigReader();
-        this.signifydClient = new SignifydClient(configReader);
+        this.signifydClient = new SignifydClient(new ConfigReader());
         this.signifydMapper = new SignifydMapper();
     }
 
     public ReturnFunction(
-        ConfigReader configReader,
         SignifydClient signifydClient,
         SignifydMapper signifydMapper
     ) {
-        this.configReader = configReader;
         this.signifydClient = signifydClient;
         this.signifydMapper = signifydMapper;
     }
@@ -59,27 +56,38 @@ public class ReturnFunction
         }
 
         ReturnInfo returnInfo = null;
-        ReturnInfoTransition transition = ReturnInfoTransition.ATTEMPT;
+        ReturnInfoTransition transition = null;
+
         for (ReturnInfo rInfo : order.getReturnInfo()) {
-            if (rInfo.getItems().stream().anyMatch(
-                    rItem -> rItem.getCustom() == null)) {
+            if (rInfo.getItems().stream().allMatch(
+                    rItem -> rItem.getShipmentState() == ReturnShipmentState.RETURNED
+                            && rItem.getCustom() == null)) {
+                transition = ReturnInfoTransition.ATTEMPT;
                 returnInfo = rInfo;
                 break;
             } else if (rInfo.getItems().stream().anyMatch(
                     rItem -> rItem.getShipmentState().equals(ReturnShipmentState.BACK_IN_STOCK)
-                            && rItem.getCustom().getFields().values().get(CustomFields.RETURN_ITEM_TRANSITION)
-                                    .toString().equals(ReturnInfoTransition.EXECUTE.name()))) {
-                returnInfo = rInfo;
+                            && rItem.getCustom() != null
+                            && rItem.getCustom().getFields().values()
+                                    .getOrDefault(CustomFields.RETURN_ITEM_TRANSITION, false)
+                                    .toString().equals(ReturnInfoTransition.ATTEMPT.name()))) {
                 transition = ReturnInfoTransition.EXECUTE;
+                returnInfo = rInfo;
                 break;
             }
         }
 
-        ReturnStrategy function;
+        if (transition == null) {
+            return new ExtensionResponse<OrderUpdateAction>(new ArrayList<>());
+        }
+
+        ReturnStrategy function = null;
         if (transition.equals(ReturnInfoTransition.ATTEMPT)) {
-            function = new AttemptReturnStrategy(configReader, signifydClient, signifydMapper);
-        } else {
-            function = new ExecuteReturnStrategy(configReader, signifydClient, signifydMapper);
+            logger.info("Return is ATTEMPTING");
+            function = new AttemptReturnStrategy(signifydClient, signifydMapper);
+        } else if (transition.equals(ReturnInfoTransition.EXECUTE)) {
+            logger.info("Return is EXECUTING");
+            function = new ExecuteReturnStrategy(signifydClient);
         }
 
         try {

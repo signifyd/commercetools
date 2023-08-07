@@ -17,7 +17,6 @@ import com.signifyd.ctconnector.function.adapter.signifyd.models.preAuth.checkou
 import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.attemptReturn.AttemptReturnRequestDraft;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.attemptReturn.AttemptReturnResponse;
 import com.signifyd.ctconnector.function.adapter.signifyd.models.returns.attemptReturn.CheckpointAction;
-import com.signifyd.ctconnector.function.config.ConfigReader;
 import com.signifyd.ctconnector.function.constants.CustomFields;
 import org.slf4j.LoggerFactory;
 
@@ -27,17 +26,14 @@ import java.util.List;
 
 public class AttemptReturnStrategy implements ReturnStrategy {
 
-    protected final ConfigReader configReader;
     protected final SignifydClient signifydClient;
     protected final SignifydMapper signifydMapper;
     protected final Logger logger = (Logger) LoggerFactory.getLogger(getClass().getName());
 
     public AttemptReturnStrategy(
-        ConfigReader configReader,
         SignifydClient signifydClient,
         SignifydMapper signifydMapper
     ) {
-        this.configReader = configReader;
         this.signifydClient = signifydClient;
         this.signifydMapper = signifydMapper;
     }
@@ -78,7 +74,7 @@ public class AttemptReturnStrategy implements ReturnStrategy {
             FieldContainer fields = FieldContainer.builder()
                     .addValue(CustomFields.RETURN_ITEM_RAW_ATTEMPT_RESPONSE,
                             objMapper.writeValueAsString(attemptReturnResponse))
-                    .addValue(CustomFields.RETURN_ITEM_TRANSITION, ReturnInfoTransition.EXECUTE.name())
+                    .addValue(CustomFields.RETURN_ITEM_TRANSITION, ReturnInfoTransition.ATTEMPT.name())
                     .build();
             response.addAction(
                     OrderSetReturnItemCustomTypeAction.builder()
