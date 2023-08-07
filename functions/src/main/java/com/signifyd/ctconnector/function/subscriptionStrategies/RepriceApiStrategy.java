@@ -52,7 +52,7 @@ public class RepriceApiStrategy implements SubscriptionStrategy {
 
         RepriceRequestDraft draft = RepriceRequestDraft
                 .builder()
-                .orderId(order.getId())
+                .orderId(order.getOrderNumber() != null ? order.getOrderNumber() : order.getId())
                 .purchase(mapPurchseFromCommercetools(order))
                 .build();
         sendRepriceRequest(draft);

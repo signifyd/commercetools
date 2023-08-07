@@ -109,7 +109,7 @@ public class PreAuthFunction
         var draftBuilder = CheckoutRequestDraft
                 .builder()
                 .checkoutId(order.getCustom().getFields().values().get(CustomFields.CHECKOUT_ID).toString())
-                .orderId(order.getId())
+                .orderId(order.getOrderNumber() != null ? order.getOrderNumber() : order.getId())
                 .transactions(transactionMapperFactory.generateTransactionMapper(TransactionMapperType.PRE_AUTH)
                         .generateTransactions())
                 .purchase(this.signifydMapper.mapPurchaseFromCommercetools(customer, order,

@@ -91,7 +91,7 @@ public class SaleApiWrapper {
 
         TransactionMapperFactory transactionMapperFactory = new TransactionMapperFactory(order, payment, configReader);
         var builder = SaleRequestDraft.builder()
-                .orderId(order.getId())
+                .orderId(order.getOrderNumber() != null ? order.getOrderNumber() : order.getId())
                 .transactions(transactionMapperFactory.generateTransactionMapper(TransactionMapperType.POST_AUTH)
                         .generateTransactions())
                 .purchase(signifydMapper.mapPurchaseFromCommercetools(customer, order,
